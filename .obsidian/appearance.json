@@ -1,0 +1,8 @@
+{
+  "monospaceFontFamily": "0xProto Nerd Font Mono",
+  "cssTheme": "",
+  "accentColor": "#0057a8",
+  "enabledCssSnippets": [
+    "math-callouts"
+  ]
+}

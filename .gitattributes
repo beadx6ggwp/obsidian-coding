@@ -1,0 +1,23 @@
+# Keep text files normalized with LF line endings across platforms.
+* text=auto eol=lf
+
+# Obsidian and project text files.
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.base text eol=lf
+*.txt text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.sh text eol=lf
+
+# Common binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.zip binary
