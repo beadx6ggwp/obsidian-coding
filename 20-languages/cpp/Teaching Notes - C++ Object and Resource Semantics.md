@@ -143,11 +143,10 @@ return local
 -> std::move misconception
 -> value categories
 -> move ownership
--> storage/lifetime
--> emplace
--> Buffer bug
--> RAII / Rule of 0/3/5
--> semantic lifting
+-> C Buffer semantic loss
+-> C++ Buffer type operations
+-> RAII / Rule of 0/3/5 / noexcept move
+-> C convention to C++ type semantics
 -> type invariants / generic programming
 ```
 
@@ -157,7 +156,10 @@ Remaining caution:
 - Ch2 can name RVO / NRVO / prvalue, but only after the named-local case is already understood.
 - Ch3 introduces `return std::move(x)` as a tempting wrong turn, not as an option the instructor recommends.
 - Ch5 value categories must stay tied to the earlier examples; do not turn it into a standalone taxonomy lecture.
-- Ch12 `C semantic gap` should remain the reveal, not be pulled forward again.
+- Do not make avoiding transfer a separate main Part. Part 1 already teaches it through `return T{}` / copy elision.
+- Raw storage / emplace should be a supporting interlude, not the main bridge after move ownership.
+- Part 3 should start from the original C `Buffer` case before C++ `class Buffer`, because the bridge to semantic preservation is "meaning lives in convention".
+- C semantic gap should remain the reveal, but Part 4 must start preparing it through Buffer / RAII rather than treating it as a sudden ending.
 
 ## Core Object Delivery Frame - 2026-05-10
 
@@ -520,41 +522,46 @@ Move is not faster copy.
 Move is meaningful when ownership can be transferred.
 ```
 
-## Part 3 - Where Objects Are Born
+## Part 3 - When Delivery Loses Meaning: The C Buffer Case
 
-## Ch7 - Storage Is Not Lifetime
-
-Core slogan:
+Purpose:
 
 ```text
-Raw storage is not an object.
+承接 Part 2 和 Part 1：
+前面已經看過 B 可以透過 copy / move / direct construction 拿到 T。
+
+Part 3 要問：
+B 拿到的是 bytes / representation，
+還是語意完整的 object？
+```
+
+This is where the final C vs C++ reveal begins to become visible.
+
+## Ch7 - C Buffer: Meaning Lives In Convention
+
+Cold open:
+
+```c
+typedef struct {
+    char* ptr;
+    size_t size;
+} Buffer;
+
+Buffer a = buffer_create(1024);
+Buffer b = a;
 ```
 
 Purpose:
 
 ```text
-建立 storage / lifetime / object identity 的底層模型。
+展示 C 可以完成 resource 管理，
+但 ownership / copy / lifetime 語意常常只存在 programmer convention / 文件 / 命名裡。
+
+Buffer b = a 複製了 representation，
+但沒有告訴讀者 ownership semantics 是否被保留。
 ```
 
-## Ch8 - In-place Construction And `emplace`
-
-Core slogan:
-
-```text
-emplace is not magic.
-It only helps when constructor arguments reach the final construction site.
-```
-
-Need boundaries:
-
-- `emplace_back(args...)` can construct new element in-place;
-- `emplace_back(T(args...))` already materialized a `T`;
-- vector reallocation can still move/copy existing elements;
-- `optional::emplace` has different storage behavior from `vector::emplace_back`.
-
-## Part 4 - Resource Semantics
-
-## Ch9 - The Buffer Bug
+## Ch8 - C++ Buffer: Copy / Move / Destroy Become Type Operations
 
 Cold open:
 
@@ -578,9 +585,13 @@ Purpose:
 ```text
 讓讀者感受到 class 不是 fields + destructor。
 copy/move/destroy 是 resource semantics。
+
+Buffer bug 不是只展示「要寫 copy constructor」，
+而是展示 representation 被複製了，
+ownership semantics 卻沒有被保留。
 ```
 
-## Ch10 - RAII And Rule Of 0/3/5
+## Ch9 - RAII And Rule Of 0/3/5
 
 Core slogan:
 
@@ -588,7 +599,7 @@ Core slogan:
 Rule of 0/3/5 is ownership pressure, not a checklist.
 ```
 
-## Ch11 - `noexcept` Move And Containers
+## Ch10 - `noexcept` Move And Containers
 
 Core slogan:
 
@@ -603,9 +614,9 @@ Need to explain:
 - strong exception guarantee;
 - why resource-owning move constructor should often be `noexcept`.
 
-## Part 5 - The Big Reveal
+## Part 4 - The Big Reveal: From C Convention To C++ Type Semantics
 
-## Ch12 - From C Convention To C++ Semantic Lifting
+## Ch11 - From C Convention To C++ Semantic Lifting
 
 This is the elevation point.
 
@@ -615,7 +626,8 @@ Core reveal:
 前面看起來是很多獨立規則：
     RVO
     move
-    storage/lifetime
+    C Buffer semantic loss
+    C++ Buffer type operations
     RAII
     Rule of 0/3/5
 
@@ -644,7 +656,7 @@ RAII
 type invariant
 ```
 
-## Ch13 - Type As Operations And Invariants
+## Ch12 - Type As Operations And Invariants
 
 Core slogan:
 
@@ -664,7 +676,7 @@ Type =
   + cost model
 ```
 
-## Ch14 - Regularity, Concepts, And Generic Programming
+## Ch13 - Regularity, Concepts, And Generic Programming
 
 Purpose:
 

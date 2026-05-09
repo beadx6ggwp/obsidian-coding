@@ -90,6 +90,7 @@ C++ object/resource semantics 的核心問題不是「怎麼最佳化 copy」，
 一個 T 在程式中被建立、交付、移動、擁有、銷毀時，
 它的 lifetime 從哪裡開始？
 resource ownership 由誰維護？
+交付後語意是否仍然被保留？
 哪些 operations 合法？
 operation 後 invariant 是否仍成立？
 compiler / library 可以在哪些條件下省略、移動或重建 object？
@@ -117,14 +118,15 @@ This table is the earlier architecture draft. The current official readable rout
 正式 `Learning Path` 應該採用這條主線：
 
 ```text
-Object Delivery
--> Return By Value / RVO
--> std::move / Value Categories
--> Move Ownership
--> Storage / Lifetime / In-place
+return local as first concrete question
+-> return path variants / RVO / copy elision
+-> std::move misconception / value categories
+-> move branch: source object already exists
+-> C Buffer: meaning lives in convention
+-> C++ Buffer: copy/move/destroy become type operations
 -> RAII / Rule of 0/3/5 / noexcept move
--> Type Invariants / Regularity
--> Rust / GC / Ownership Design Space
+-> C convention to C++ type semantics
+-> type invariants / regularity / generic programming
 ```
 
 RVO 可以在前言中作為原始 hook：
@@ -132,6 +134,17 @@ RVO 可以在前言中作為原始 hook：
 ```text
 我最初只是想知道 RVO 是什麼；
 但 RVO 其實逼出了 C++ object/resource semantics 的整條問題鏈。
+```
+
+Part 3 的轉向尤其重要：
+
+```text
+不要在 move 之後再開一個 avoiding transfer 主線。
+Part 1 已經用 `return T{}` / copy elision 講過 direct construction。
+
+move 後面應直接接 C Buffer：
+    representation 可以被複製，
+    但 ownership / lifetime / copy meaning 仍可能只存在 convention。
 ```
 
 ## Side Branches

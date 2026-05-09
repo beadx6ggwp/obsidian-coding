@@ -2241,13 +2241,13 @@ construct into final storage
 ## Prompt:
 2026/5/7 下午9:42:08
 
-[2026/5/7 下午 09:37] L YR: 我現在在想這東西有沒有延伸的概念
-[2026/5/7 下午 09:37] L YR: 因為我報告估計要講40分鐘左右
-[2026/5/7 下午 09:37] L YR: 可能要多拉一點東西 進來講
-[2026/5/7 下午 09:37] L YR: 或是就不報RVO了
-[2026/5/7 下午 09:37] L YR: 去cppcon找題材
-[2026/5/7 下午 09:39] Bead: 感覺如果能找出各種CASE 解釋怎麼評估哪些想法可以 去寫出好的PATTEN讓COMPLIER做RVO優化 這種角度呢
-[2026/5/7 下午 09:40] Bead: 這樣不太能
+我現在在想這東西有沒有延伸的概念
+因為我報告估計要講40分鐘左右
+可能要多拉一點東西 進來講
+或是就不報RVO了
+去cppcon找題材
+感覺如果能找出各種CASE 解釋怎麼評估哪些想法可以 去寫出好的PATTEN讓COMPLIER做RVO優化 這種角度呢
+這樣不太能
 T makeB(bool flag) {
     T a;
     T b;
@@ -2270,7 +2270,7 @@ T make(bool flag) {
 
     return result;
 }
-[2026/5/7 下午 09:41] Bead: 雖然我不曉得什麼情境 會需要這樣做
+雖然我不曉得什麼情境 會需要這樣做
 
 ## Response:
 2026/5/7 下午9:42:12
@@ -2297,7 +2297,7 @@ T make(bool flag) {
 >
 > **Formulating a concrete C++ answer**
 >
-> I need to cover "Bead's idea" but make sure to explain how it fits within real-world use cases. I’ll focus on object lifetime, value categories, API design, in-place construction, and compiler behavior. I plan to include realistic examples, like refactoring two locals into one, and the challenges with constructors/invariants across setups.
+> I need to cover "idea" but make sure to explain how it fits within real-world use cases. I’ll focus on object lifetime, value categories, API design, in-place construction, and compiler behavior. I plan to include realistic examples, like refactoring two locals into one, and the challenges with constructors/invariants across setups.
 >
 > **Clarifying return behaviors and report structure**
 >
@@ -2307,7 +2307,7 @@ T make(bool flag) {
 
 這個方向可以報，但主題最好不要叫「RVO 介紹」。比較有 40 分鐘潛力的是：**從 return-by-value 到 in-place construction：怎麼設計讓 compiler / library 幫你省掉中間物件**。我先把它整理成可報告的骨架。
 
-你朋友 Bead 這個方向**可以**，但要修正一下重點：
+這個方向**可以**，但要修正一下重點：
 
 > 不要報成「怎麼寫出好的 pattern 讓 compiler 做 RVO」。  
 > 比較好的題目是：**怎麼從需求語意判斷：該用 return-by-value、NRVO、prvalue return、emplace，還是 mutation API。**
@@ -2353,7 +2353,7 @@ Return by Value 不一定慢：C++ 如何把結果直接建構到最終位置
 
 ---
 
-## Bead 舉的例子方向是對的，但要補一個關鍵修正
+## 舉的例子方向是對的，但要補一個關鍵修正
 
 他說這種不太能：
 
@@ -2508,7 +2508,7 @@ Microsoft C++ team 也特別提醒過：C++17 所謂 guaranteed copy elision 的
 
 ## 所以報告中可以講：不要盲目追求單一 `result`
 
-Bead 的例子可以拿來講，但要加這段判斷：
+例子可以拿來講，但要加這段判斷：
 
 ```text
 多個 named local return 可能降低 NRVO 機會。
@@ -2531,7 +2531,7 @@ Bead 的例子可以拿來講，但要加這段判斷：
 
 ---
 
-## 什麼情境真的會需要 Bead 說的改寫？
+## 什麼情境真的會需要改寫？
 
 ### 1. 建構 render config / pipeline config
 
@@ -2842,8 +2842,7 @@ T x = T{};
 ---
 
 ### 3. NRVO 失敗與控制流程 7 分鐘
-
-拿 Bead 的例子：
+例子：
 
 ```cpp
 T makeB(bool flag) {

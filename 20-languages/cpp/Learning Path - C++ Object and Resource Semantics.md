@@ -94,11 +94,10 @@ return local
 -> std::move misconception
 -> value categories
 -> move ownership
--> storage / lifetime
--> emplace
--> Buffer bug
--> RAII / Rule of 0/3/5
--> semantic lifting
+-> C Buffer semantic loss
+-> C++ Buffer type operations
+-> RAII / Rule of 0/3/5 / noexcept move
+-> C convention to C++ type semantics
 -> type invariants / generic programming
 ```
 
@@ -612,148 +611,148 @@ Move 的核心通常不是 byte-copy speed，而是 ownership transfer。
 ## Natural Next Question
 
 ```text
-如果 object 可以在不同地方出生、被 move、被 destroy，
-那 memory 和 object lifetime 到底是什麼關係？
+到目前為止我們看過三條 object delivery path：
+
+copy:
+    A 和 B 都有一份
+
+move:
+    A 放棄 ownership，B 接手
+
+in-place:
+    T 直接在 B 的 final storage 出生
+
+但下一個問題不是哪條路比較快。
+
+B 拿到的那個 T，語意還在嗎？
 ```
 
-這自然導向 storage / lifetime。
+這自然導向 C `Buffer`。
 
-## Part 3 - Where Objects Are Born
+## Part 3 - When Delivery Loses Meaning: The C Buffer Case
 
-## Ch7 - Raw Storage Is Not An Object
+## Why This Part Exists
+
+前面一直在問：
+
+```text
+B 怎麼拿到 T？
+```
+
+現在要問更深一層：
+
+```text
+B 拿到的是 bytes / representation，
+還是語意完整的 object？
+```
+
+這裡必須回到原始對話裡的 C `Buffer`，因為它最能展示：
+
+```text
+C 可以完成 resource 管理。
+但語意常常只存在 programmer convention / 文件 / 命名裡。
+```
+
+## Ch7 - C Buffer: Meaning Lives In Convention
 
 ## Cold Open
 
-```cpp
-alignas(T) unsigned char storage[sizeof(T)];
+```c
+typedef struct {
+    char* ptr;
+    size_t size;
+} Buffer;
+
+Buffer a = buffer_create(1024);
+Buffer b = a;
 ```
 
 ## Question
 
 ```text
-這裡已經有一個 T object 嗎？
+這行 `Buffer b = a;` 的語意是什麼？
 ```
 
 ## Naive Model
 
 ```text
-有一塊足夠大的 memory
--> 那裡就有 object
+struct assignment 就是複製一份 Buffer。
 ```
 
 ## Correct Direction
 
-C++ 要分開：
+在 C 這裡，representation 被複製了：
 
 ```text
-storage:
-    一塊符合 size / alignment 的 memory
-
-object lifetime:
-    initialization 完成後，typed object 才存在
+a.ptr == b.ptr
 ```
 
-這章把前面的 return path 拉回更底層的模型：
+但 ownership semantics 沒有被複製：
 
 ```text
-重要的不只是 object 被不被 copy；
-重要的是 object lifetime 在哪一塊 storage 開始。
+a.ptr ─┐
+       ├──→ same heap buffer
+b.ptr ─┘
 ```
+
+所以真正不清楚的是：
+
+```text
+Buffer 能不能 copy？
+如果能 copy，是 shallow copy 還是 deep copy？
+copy 之後誰 owns heap buffer？
+誰負責 destroy？
+Buffer 的 lifetime 從哪裡開始，到哪裡結束？
+```
+
+如果最後：
+
+```c
+buffer_destroy(&a);
+buffer_destroy(&b);
+```
+
+就可能 double free。
+
+這不是 C 做不到，而是這些規則沒有被 type 本身保留。沒有完整上下文的人，只看 `typedef struct` 和 `Buffer b = a`，無法知道正確語意。
 
 ## Main Reading
 
-- [[20-languages/cpp/deep-dives/Deep Dive - Half RVO Misconception Storage and Lifetime]]
-- [[20-languages/cpp/conversation-notes/Conversation Note - RVO Verification Compile Flags and Placement New]]
-
-## Concept Cards
-
-- [[20-languages/cpp/object-resource-semantics/Concept - Storage vs Object Lifetime]]
-- [[20-languages/cpp/object-resource-semantics/Concept - Placement New and construct_at]]
+- [[20-languages/cpp/conversation-notes/Conversation Note - C vs C++ Semantic Lifting and Hidden Semantics]]
+- [[20-languages/cpp/deep-dives/Deep Dive - C Convention to Cpp Semantic Lifting]]
+- [[20-languages/cpp/object-resource-semantics/Concept - C vs C++ Semantic Lifting]]
 
 ## Natural Next Question
 
 ```text
-如果 object 可以直接在目標 storage 開始 lifetime，
-那 container / wrapper 能不能也這樣做？
+如果問題不是「C 能不能做」，
+而是語意沒有被 type 保存，
+那 C++ 會把這些語意放到哪裡？
 ```
 
-這自然導向 `emplace`。
+這自然導向 C++ Buffer。
 
-## Ch8 - `emplace` Is Not Magic
-
-## Cold Open
-
-```cpp
-std::vector<T> v;
-v.emplace_back(args...);
-```
-
-## Question
-
-```text
-這是不是保證完全沒有 move？
-```
-
-## Naive Model
-
-```text
-emplace = no move
-```
-
-## Correct Direction
-
-`emplace` 的價值在於：
-
-```text
-constructor arguments reach the final construction site
-```
-
-這和 RVO / copy elision 呼應的是同一個方向：讓 object 的 lifetime 從 final storage 開始。但 `emplace` 是 library/API 層面的機制，不代表任何情況都沒有 move。
-
-但邊界很重要：
-
-- `emplace_back(args...)` 可以直接建新 element。
-- `emplace_back(T(args...))` 已經先 materialized 一個 `T`。
-- `vector` reallocation 仍可能 move/copy 既有 elements。
-- `optional::emplace` 和 `vector::emplace_back` 的 storage behavior 不同。
-
-## Main Reading
-
-- [[20-languages/cpp/deep-dives/Deep Dive - Destination First Construction Across RVO Emplace and Placement New]]
-- [[20-languages/cpp/object-resource-semantics/Concept - In-place Construction and emplace]]
-
-## Style Reference
-
-- [Arthur O'Dwyer - The Superconstructing Super Elider](https://quuxplusone.github.io/blog/2018/03/29/the-superconstructing-super-elider/)
-
-## Natural Next Question
-
-```text
-到目前為止我們一直在看 object 怎麼交付、出生、移動。
-那如果 object 擁有 resource，copy / move / destroy 會不會變成 type 的核心語義？
-```
-
-這自然導向 Buffer bug。
-
-## Part 4 - Resource Semantics
-
-## Ch9 - The Buffer Bug
+## Ch8 - C++ Buffer: Copy / Move / Destroy Become Type Operations
 
 ## Cold Open
 
 ```cpp
 class Buffer {
+public:
+    Buffer(size_t n) : ptr(new char[n]), size(n) {}
+    ~Buffer() { delete[] ptr; }
+
+private:
     char* ptr;
     size_t size;
-public:
-    ~Buffer() { delete[] ptr; }
 };
 ```
 
 ## Question
 
 ```text
-compiler-generated copy constructor 對嗎？
+如果這個 type 有 destructor，
+compiler-generated copy constructor 還對嗎？
 ```
 
 ## Naive Model
@@ -765,15 +764,36 @@ copy / move 是 compiler 幫我處理的小事
 
 ## Correct Direction
 
-如果 type owns resource，copy / move / destroy 就是它的核心語義。
+如果 type owns resource，copy / move / destroy 就不再是小細節，而是它的核心語義。
 
 Default copy 只會複製 pointer value：
 
 ```text
-a.ptr == b.ptr
+b.ptr = a.ptr
+b.size = a.size
 ```
 
-但 ownership 沒有被正確複製，於是可能 double free。
+但這沒有定義 ownership semantics。兩個 object 可能都以為自己 owns 同一塊 memory，最後兩個 destructor 都 delete。
+
+這個 bug 的重點不是「忘了寫 copy constructor」而已，而是：
+
+```text
+data representation 被複製了，
+但 ownership semantics 沒有被保留。
+```
+
+C++ 的方向是讓 type operation 明確回答：
+
+```text
+copy:
+    deep copy? deleted?
+
+move:
+    transfer ownership? moved-from source remains valid?
+
+destructor:
+    releases owned resource?
+```
 
 ## Main Reading
 
@@ -793,7 +813,7 @@ a.ptr == b.ptr
 
 這自然導向 RAII / Rule of 0/3/5。
 
-## Ch10 - Rule Of 0/3/5 Is Ownership Pressure
+## Ch9 - Rule Of 0/3/5 Is Ownership Pressure
 
 ## Naive Model
 
@@ -834,7 +854,7 @@ let higher-level domain types follow Rule of Zero
 
 這自然導向 `noexcept move`。
 
-## Ch11 - `noexcept` Move Is A Promise To Generic Code
+## Ch10 - `noexcept` Move Is A Promise To Generic Code
 
 ## Cold Open
 
@@ -880,16 +900,19 @@ else:
 ## Natural Next Question
 
 ```text
-我們一路看了 return、move、lifetime、RAII。
-這些真的只是 C++ 零散規則嗎？
-還是它們在解同一個更大的問題？
+我們一路看了 return、move、in-place、lifetime、RAII。
+這些不是零散技巧。
+
+它們都在問：
+    C 裡靠 convention 留在人腦中的 resource semantics，
+    能不能被 C++ 放進 object lifetime、type operation、generic contract 裡？
 ```
 
 這自然導向 Big Reveal。
 
-## Part 5 - The Big Reveal
+## Part 4 - The Big Reveal: From C Convention To C++ Type Semantics
 
-## Ch12 - From C Convention To C++ Semantic Lifting
+## Ch11 - From C Convention To C++ Semantic Lifting
 
 ## Why This Comes Late
 
@@ -909,9 +932,9 @@ C++ solves C's semantic gap.
 - `std::move` 不 move；
 - value category 不等於 lifetime；
 - move 其實是 ownership transfer；
-- raw storage 不等於 object；
-- `emplace` 不是 magic；
-- shallow copy 會 double free；
+- `return T{}` / copy elision 展示 object 不一定要先在 source 出生；
+- C `Buffer` 展示 representation 可以被複製，但 ownership semantics 留在 convention；
+- C++ `Buffer` 展示 copy / move / destroy 必須成為 type operations；
 - Rule of 0/3/5 來自 ownership pressure。
 
 這時才可以回頭說：
@@ -960,7 +983,7 @@ type invariant
 
 這自然導向 type invariants。
 
-## Ch13 - A Type Is Not Just A Layout
+## Ch12 - A Type Is Not Just A Layout
 
 ## Naive Model
 
@@ -1007,7 +1030,7 @@ generic algorithm 要怎麼知道一個 type 滿足哪些 operations？
 
 這自然導向 concepts / regularity。
 
-## Ch14 - Regularity, Concepts, And Generic Programming
+## Ch13 - Regularity, Concepts, And Generic Programming
 
 ## Core Question
 
@@ -1053,6 +1076,42 @@ for programmers, libraries, and compilers to reason about them.
 ```
 
 ## Extensions
+
+## Supporting Interlude - Final Storage Beyond Return
+
+Status:
+
+```text
+supporting / optional
+```
+
+Why it is not main path:
+
+```text
+Part 1 已經透過 `return T{}` / copy elision 建立 direct construction。
+如果主線再開一個 Part 講 avoiding transfer，會像重複 RVO。
+
+這段應該只作為補充：
+同一個 final-storage 思想在 container / wrapper / low-level storage 裡如何出現。
+```
+
+Topics:
+
+- raw storage is not an object;
+- storage vs object lifetime;
+- `emplace` is not magic;
+- `emplace_back(args...)` vs `emplace_back(T(args...))`;
+- `vector` reallocation may still move/copy existing elements;
+- placement new / `construct_at` as low-level lifetime control.
+
+Reading:
+
+- [[20-languages/cpp/deep-dives/Deep Dive - Destination First Construction Across RVO Emplace and Placement New]]
+- [[20-languages/cpp/deep-dives/Deep Dive - Half RVO Misconception Storage and Lifetime]]
+- [[20-languages/cpp/conversation-notes/Conversation Note - RVO Verification Compile Flags and Placement New]]
+- [[20-languages/cpp/object-resource-semantics/Concept - Storage vs Object Lifetime]]
+- [[20-languages/cpp/object-resource-semantics/Concept - In-place Construction and emplace]]
+- [[20-languages/cpp/object-resource-semantics/Concept - Placement New and construct_at]]
 
 ## E1 - Factory Lambda And Delayed Construction
 
