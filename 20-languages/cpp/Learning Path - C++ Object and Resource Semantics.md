@@ -362,6 +362,10 @@ Move 不應該在這之前變成主角。
 
 ## Ch3 - C Buffer: Representation Copy Is Not Semantic Copy
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy]]
+
 ## Cold Open
 
 ```c
@@ -433,6 +437,10 @@ buffer_destroy(&b);
 這自然導向 deep copy / deleted copy。
 
 ## Ch4 - Deep Copy, Deleted Copy, And The Pressure On Type Design
+
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 4 - Deep Copy Deleted Copy And Type Design Pressure]]
 
 ## Core Question
 
@@ -1273,16 +1281,16 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy
+Write Chapter 5 - Cpp Buffer Copy Destroy Become Type Semantics
 ```
 
 Expected chapter goal:
 
 ```text
-Use the `Buffer` raw-pointer example to show:
-representation copy can look cheap but lose ownership meaning.
+Turn the C Buffer problem into a C++ type:
+constructor acquires, destructor releases, copy must be defined or deleted.
 
-Do not introduce move yet.
-Do not turn it into "C is bad"; frame it as "C can do it, but the meaning lives in convention".
-End by asking what C++ type operations can make explicit.
+Do not make it a Rule of Five checklist yet.
+Do not introduce std::move yet.
+Keep the point focused: copy / destroy become type operations.
 ```

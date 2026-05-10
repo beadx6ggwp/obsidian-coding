@@ -149,6 +149,8 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 - [[20-languages/cpp/teaching/Chapter 1 - How Many Objects Are In This Code|Chapter 1 - How Many Objects Are In This Code]]
 - [[20-languages/cpp/teaching/Chapter 2 - Copy Is Not Just Moving Bytes|Chapter 2 - Copy Is Not Just Moving Bytes]]
+- [[20-languages/cpp/teaching/Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy|Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy]]
+- [[20-languages/cpp/teaching/Chapter 4 - Deep Copy Deleted Copy And Type Design Pressure|Chapter 4 - Deep Copy Deleted Copy And Type Design Pressure]]
 
 ## Calibration Status
 
@@ -163,7 +165,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy`
+- `Chapter 5 - Cpp Buffer Copy Destroy Become Type Semantics`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
 
