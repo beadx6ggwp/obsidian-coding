@@ -36,6 +36,22 @@ modern C++ design pressure:
     讓 object 盡量直接出生在它最後要待的位置。
 ```
 
+但 RAII、copy / move、RVO 不是同一個層級：
+
+```text
+RAII:
+    lifetime semantics
+    resource lifetime follows object lifetime
+
+copy / move:
+    transfer semantics
+    resource-owning object 被交付時 ownership invariant 怎麼保持
+
+RVO / emplace:
+    construction placement semantics
+    object 能不能直接在 destination storage 形成
+```
+
 > [!note] Visual overview
 > 這張總覽圖可以當成整組筆記的入口圖。完整圖片配置規劃見 [[20-languages/cpp/Image Map - ChatGPT CPP RVO 解釋|Image Map - ChatGPT CPP RVO 解釋]]。
 >
@@ -140,7 +156,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 1 - I Made A Local And Returned It`
+- `Chapter 1 - C Buffer Representation Copy Is Not Semantic Copy`
 - `Stepanov Generic Programming and Algebraic Structures`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
@@ -151,7 +167,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 如果只想快速查概念，讀 `Core Notes`，但目前 Concept notes 是下一階段要重新校準的 lookup layer，不應取代 Conversation Notes 或新 Deep Dives。
 
-概念閱讀順序：先讀 `Object Delivery`，再讀 `RVO and NRVO`。如果卡在 `std::move` 為什麼會破壞 NRVO，先補 `Value Categories` 與 `std move vs Move Constructor`。
+正式教學路線目前以 `C Buffer` 開場，先讀 `C vs C++ Semantic Lifting`、`RAII and Rule of 0 3 5`、`Move Semantics and Ownership`，再回到 `Object Delivery` 和 `RVO and NRVO`。如果卡在 `std::move` 為什麼會破壞 NRVO，先補 `Value Categories` 與 `std move vs Move Constructor`。
 
 第二輪可以讀 `Half RVO Misconception` 與 `Destination First Construction`，再回到 `Storage vs Object Lifetime`、`Placement New`、`emplace` 這些 Concept cards。這樣不會把原始對話裡「我是不是想成半個 RVO」和「哪些 case 同構」混成同一個問題。
 

@@ -96,6 +96,27 @@ operation 後 invariant 是否仍成立？
 compiler / library 可以在哪些條件下省略、移動或重建 object？
 ```
 
+這些問題不要壓成同一層技巧。最新分層：
+
+```text
+Lifetime semantics:
+    RAII
+    resource lifetime follows object lifetime
+
+Transfer semantics:
+    copy / move
+    object 被交付時 ownership / invariant 是否保持
+
+Construction placement semantics:
+    RVO / NRVO / copy elision / emplace
+    object 能不能直接在 destination storage 形成
+
+Validity / invariant:
+    valid state
+    moved-from state
+    ownership invariant
+```
+
 ## Previous Learning Path Draft
 
 This table is the earlier architecture draft. The current official readable route has been revised into a talk-style outline in [[20-languages/cpp/Learning Path - C++ Object and Resource Semantics|Learning Path]], using [[20-languages/cpp/Teaching Notes - C++ Object and Resource Semantics|Teaching Notes]] as the decision source.
@@ -118,13 +139,13 @@ This table is the earlier architecture draft. The current official readable rout
 正式 `Learning Path` 應該採用這條主線：
 
 ```text
-return local as first concrete question
--> return path variants / RVO / copy elision
--> std::move misconception / value categories
--> move branch: source object already exists
--> C Buffer: meaning lives in convention
+C Buffer: representation copy loses meaning
 -> C++ Buffer: copy/move/destroy become type operations
--> RAII / Rule of 0/3/5 / noexcept move
+-> RAII / Rule of 0/3/5
+-> move branch: ownership transfer when copy is wrong
+-> std::move misconception / value categories
+-> return by value / RVO as no-transfer case
+-> noexcept move / generic library contract
 -> C convention to C++ type semantics
 -> type invariants / regularity / generic programming
 ```
@@ -136,15 +157,14 @@ RVO 可以在前言中作為原始 hook：
 但 RVO 其實逼出了 C++ object/resource semantics 的整條問題鏈。
 ```
 
-Part 3 的轉向尤其重要：
+最新教學轉向：
 
 ```text
-不要在 move 之後再開一個 avoiding transfer 主線。
-Part 1 已經用 `return T{}` / copy elision 講過 direct construction。
+C Buffer 應該成為正式開場。
+RVO 只保留為原始動機，並在後面 object delivery 章節回來。
 
-move 後面應直接接 C Buffer：
-    representation 可以被複製，
-    但 ownership / lifetime / copy meaning 仍可能只存在 convention。
+主線不是 RVO，也不只是 move。
+核心是 ownership / lifetime / resource semantics 如何被 type operations 保留。
 ```
 
 ## Side Branches

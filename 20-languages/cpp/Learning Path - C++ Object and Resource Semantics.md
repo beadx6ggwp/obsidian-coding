@@ -56,6 +56,47 @@ C++:
 
 C 的困境不是做不到，而是很多語義藏在 programmer convention 裡。C++ 的方向不是把 C 包裝得比較好看，而是試圖把 lifetime / ownership / copy / move / valid state 這些語義放進 type operations 和 object model。
 
+## Semantic Axes
+
+RAII、copy / move、RVO 不是同一個概念層級。它們在同一個大框架裡，但分別處理不同軸：
+
+```text
+C++ object / resource semantics
+
+Lifetime semantics:
+    RAII
+    constructor acquires
+    destructor releases
+    resource lifetime follows object lifetime
+
+Transfer semantics:
+    copy
+        duplicate / share / view / delete
+    move
+        ownership transfer
+        source remains valid moved-from object
+
+Construction placement semantics:
+    RVO / NRVO
+    copy elision
+    emplace / placement new
+
+Validity / invariant:
+    valid state
+    moved-from state
+    ownership invariant
+```
+
+這個分層很重要，因為：
+
+```text
+RAII 決定 resource 跟 object lifetime 怎麼綁定。
+copy / move 決定這個 RAII object 被交付時，ownership 怎麼保持正確。
+RVO / in-place construction 決定 object 能不能直接在目的地形成。
+```
+
+所以 Rule of 0/3/5 不是把不相關技巧硬湊在一起，而是因為：一旦 type 進入 RAII resource-owning 狀態，copy / move / destroy 這些 special member functions 就必須一起維護同一個 ownership invariant。
+
 ## Prologue - I Started From RVO
 
 這段保留原始動機，但不把 RVO 當正式教學入口。
@@ -278,6 +319,19 @@ copy / move 是 compiler 幫我處理的小事
 
 如果 type owns resource，copy / move / destroy 就不再是小細節，而是它的核心語義。
 
+這裡要先分清楚兩個層次：
+
+```text
+RAII:
+    constructor acquire resource
+    destructor release resource
+    resource lifetime follows object lifetime
+
+copy / move:
+    當 RAII object 被交付給另一個 object 時，
+    ownership invariant 要怎麼保持？
+```
+
 Default copy 只會複製 pointer value：
 
 ```text
@@ -330,6 +384,16 @@ Rule of 0/3/5 不是 checklist，而是 ownership pressure：
 ```text
 if destructor frees resource,
 then copy/move/assignment must define resource semantics too.
+```
+
+更精準地說：
+
+```text
+RAII 先讓 object 擁有 resource。
+Rule of 0/3/5 是在問：
+    這個擁有 resource 的 object
+    被 copy、move、assign、destroy 時，
+    同一個 ownership invariant 是否仍然成立？
 ```
 
 Modern direction:
