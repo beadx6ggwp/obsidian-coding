@@ -147,9 +147,8 @@ return local object
 -> C++ Buffer type operations
 -> RAII / Rule of 0/3/5
 -> return by value / RVO revisited as no-transfer case
--> generic failure semantics
 -> C convention to C++ type semantics
--> type invariants / generic programming
+-> type invariants
 ```
 
 Remaining caution:
@@ -454,10 +453,6 @@ Part 4:
     RVO is the no-transfer case: sometimes there is nothing to move.
 
 Part 5:
-    Generic and failure semantics.
-    `noexcept move` is a promise to generic code.
-
-Part 6:
     Big reveal.
     C convention becomes C++ type semantics.
 ```
@@ -515,26 +510,30 @@ Teaching purpose:
 不要一開始就丟 C++17 prvalue / `return T{}` / NRVO / xvalue。
 ```
 
-## Ch2 - Return Paths: Direct Construction, NRVO, Fallback Move
+## Ch2 - Three Stories For Getting A T
 
 Core model:
 
 ```text
-return T{}:
-    direct construction of result object
+copy:
+    A 有一份 T。
+    B 得到一份語意等價的新 T。
 
-return x:
-    NRVO candidate
-    fallback can move/copy
+move:
+    A 已經有一個 T。
+    B 接手 A 背後的 ownership/resource。
+
+in-place:
+    A 那邊根本不需要先有獨立 object。
+    T 直接在 B 的 final storage 形成。
 ```
 
-Vocabulary appears here:
+Teaching purpose:
 
-- result object
-- copy elision
-- prvalue
-- NRVO
-- implicit move fallback
+```text
+先建立 object delivery vocabulary。
+不要在這章完整展開 `return T{}` / C++17 prvalue / NRVO fallback。
+```
 
 ## Ch3 - Why `return std::move(local)` Can Be Worse
 
@@ -554,8 +553,9 @@ Better opening question:
 Purpose:
 
 ```text
-把 return path 和 value category 接起來，
-為 Part 2 的 std::move / xvalue 做鋪墊。
+先問「為什麼我會想幫 compiler move」。
+把 return path 的焦慮接到 Part 2 的 `std::move` / xvalue，
+但不要在這章把 NRVO 規則講完。
 ```
 
 ## Part 2 - Moving Without Moving
@@ -698,24 +698,46 @@ Core slogan:
 Rule of 0/3/5 is ownership pressure, not a checklist.
 ```
 
-## Ch10 - `noexcept` Move And Containers
+## Part 4 - Return By Value Revisited
+
+Purpose:
+
+```text
+回到開頭，但現在讀者已經有 copy / move / in-place / ownership 的模型。
+這時才細分 `return T{}`、`return x`、`return std::move(x)`。
+```
+
+## Ch10 - `return T{}`: Sometimes There Is Nothing To Move
 
 Core slogan:
 
 ```text
-noexcept move is a promise to generic code.
+RVO means sometimes there is nothing to move.
 ```
 
 Need to explain:
 
-- vector reallocation;
-- `std::move_if_noexcept`;
-- strong exception guarantee;
-- why resource-owning move constructor should often be `noexcept`.
+- same-type prvalue return can directly initialize result object;
+- this is not "compiler secretly moving better";
+- this belongs to construction placement semantics.
 
-## Part 4 - The Big Reveal: From C Convention To C++ Type Semantics
+## Ch11 - `return x` vs `return std::move(x)`
 
-## Ch11 - From C Convention To C++ Semantic Lifting
+Core slogan:
+
+```text
+Do not move from a local return value just to be helpful.
+```
+
+Need to explain:
+
+- `return x` keeps NRVO candidate shape;
+- fallback may move/copy;
+- `return std::move(x)` changes expression to xvalue and usually blocks NRVO.
+
+## Part 5 - The Big Reveal: From C Convention To C++ Type Semantics
+
+## Ch12 - From C Convention To C++ Semantic Lifting
 
 This is the elevation point.
 
@@ -755,7 +777,7 @@ RAII
 type invariant
 ```
 
-## Ch12 - Type As Operations And Invariants
+## Ch13 - Type As Operations And Invariants
 
 Core slogan:
 
@@ -775,18 +797,47 @@ Type =
   + cost model
 ```
 
-## Ch13 - Regularity, Concepts, And Generic Programming
-
-Purpose:
-
-```text
-把 Stepanov / regular / semiregular 放在最後，
-作為「type operations can be reasoned about」的延伸。
-```
-
 ## Extensions
 
-## E1 - Factory Lambda And Delayed Construction
+## E1 - `noexcept` Move And Containers
+
+Status:
+
+```text
+extension / library contract case study
+```
+
+Reason:
+
+```text
+它很重要，但會把主線從 object delivery / ownership semantics
+拉到 generic containers 和 exception guarantee。
+```
+
+Need to explain:
+
+- vector reallocation;
+- `std::move_if_noexcept`;
+- strong exception guarantee;
+- why resource-owning move constructor should often be `noexcept`.
+
+## E2 - Regularity, Concepts, And Generic Programming
+
+Status:
+
+```text
+extension / generic programming endpoint
+```
+
+Reason:
+
+```text
+主線只需要講到 type 不只是 layout。
+regularity / concepts 是下一層：
+generic algorithm 如何描述 operation requirements。
+```
+
+## E3 - Factory Lambda And Delayed Construction
 
 Status:
 
@@ -800,7 +851,7 @@ Reason:
 目前還沒完全掌握，不應該強放主線。
 ```
 
-## E2 - ABI Return Slot
+## E4 - ABI Return Slot
 
 Status:
 
@@ -815,7 +866,7 @@ useful implementation model,
 not standard source transformation.
 ```
 
-## E3 - Rust Ownership As Comparison
+## E5 - Rust Ownership As Comparison
 
 Status:
 
@@ -830,7 +881,7 @@ Purpose:
 不拉走 C++ 主線。
 ```
 
-## E4 - CppCon Watchlist
+## E6 - CppCon Watchlist
 
 Status:
 
@@ -858,19 +909,18 @@ Potential chapter slogans:
 - `std::move does not move.`
 - `Value category is not lifetime.`
 - `Move is not faster copy.`
-- `Raw storage is not an object.`
-- `emplace is not magic.`
 - `Rule of 0/3/5 is ownership pressure, not a checklist.`
 - `A type is not just a layout.`
 - `C++ lifts resource conventions into type operations.`
 
 ## Open Decisions
 
-These still need judgment before rewriting the official `Learning Path`:
+These still need judgment before writing the first full chapter:
 
 - Whether Ch1 should be called `How Many Objects Are In This Code?` or `Objects In Transit`.
 - Whether `Object Delivery` should appear as the first explicit term, or be revealed after the three return examples.
 - How deep Ch5 should go into `glvalue` before overwhelming the reader.
+- Whether `return T{}` belongs in Ch1 or waits until the RVO revisited chapter.
 - Whether factory lambda remains extension permanently or becomes an advanced chapter later.
 - Whether the first full chapter should be `How Many Objects Are In This Code?` instead of `Object Delivery`.
 

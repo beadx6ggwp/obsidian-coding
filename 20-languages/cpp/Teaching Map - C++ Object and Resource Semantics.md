@@ -147,9 +147,8 @@ Return by value: how does the caller get a valid T?
 -> C++ Buffer: copy/move/destroy become type operations
 -> RAII / Rule of 0/3/5
 -> return by value / RVO as no-transfer case
--> noexcept move / generic library contract
 -> C convention to C++ type semantics
--> type invariants / regularity / generic programming
+-> type invariants
 ```
 
 RVO 可以在前言中作為原始 hook：
@@ -180,8 +179,12 @@ C Buffer 不消失，但它不再是第一幕。
 
 | Side Branch | Where To Attach | Why It Is Side Branch |
 | --- | --- | --- |
+| `noexcept` move / vector reallocation | After RAII / Rule of 0/3/5 | 是 generic library + exception guarantee 的案例，不是 object delivery 主線 |
+| regularity / concepts / Stepanov | After type invariants | 是 generic programming requirements 的下一層，不是這場 object/resource 主線必經章節 |
 | ABI return slot / `sret` | Module 2 or 5 | 是 systems mental model，不是 C++ standard semantics |
 | Compiler flags / `-fno-elide-constructors` | Module 2 appendix | 是 verification tool，不是概念主線 |
+| raw storage / placement new / `construct_at` | After RVO revisited | 是 low-level lifetime control，不是開場需要的模型 |
+| `emplace` / factory lambda | After final-storage extension | 容易把 RVO / emplace / placement new / factory API 混在一起 |
 | Engine / browser analogies | Module 6 appendix | 可幫理解 delayed construction，但要避免過度類比 |
 | CppCon watchlist | End of path | 作為 further reading，不塞進主線 |
 | Thinking method self-analysis | Meta appendix | 保留學習方法，不與 C++ 概念混排 |

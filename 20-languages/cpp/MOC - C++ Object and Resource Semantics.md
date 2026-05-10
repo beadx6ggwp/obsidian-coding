@@ -157,7 +157,6 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 ## Next Notes To Extract
 
 - `Chapter 1 - How Many Objects Are In This Code`
-- `Stepanov Generic Programming and Algebraic Structures`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
 
@@ -169,8 +168,10 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 正式教學路線目前以 `return by value` 開場，先讀 `RVO and NRVO`、`Object Delivery`、`std move vs Move Constructor`、`Value Categories`，再進入 `Move Semantics and Ownership`。接著用 `C Buffer` 回答「為什麼 copy / move 不是單純效能問題」，再讀 `C vs C++ Semantic Lifting` 與 `RAII and Rule of 0 3 5`。
 
-第二輪可以讀 `Half RVO Misconception` 與 `Destination First Construction`，再回到 `Storage vs Object Lifetime`、`Placement New`、`emplace` 這些 Concept cards。這樣不會把原始對話裡「我是不是想成半個 RVO」和「哪些 case 同構」混成同一個問題。
+第二輪可以讀 `Half RVO Misconception` 與 `Destination First Construction`，再回到 `Storage vs Object Lifetime`、`Placement New`、`emplace` 這些 Concept cards。這些目前都屬於 final-storage / low-level lifetime extension，不是主線第一輪。
 
 最後讀 `Buffer Bug RAII`、`Object Not Just Data`、`C Convention to Cpp Semantic Lifting`、`Type Operations Laws Invariants and Stepanov`，它們負責把 return-by-value / move / Buffer 這些局部技巧拉回 C++ 的整體 object/resource model。
+
+`noexcept Move and Container Reallocation`、`regularity / concepts`、`ABI return slot`、`Rust comparison` 目前都作為延伸閱讀：它們很重要，但會把主線分別帶到 generic library behavior、generic programming、implementation model、cross-language ownership design。
 
 如果要把它放進更大的 systems 圖像，讀 `Function Call Stack and Return Object Storage`。如果要保留這份對話的提問方法，讀 `Question Trail` 和 `Layered Semantic Decomposition`。

@@ -158,9 +158,8 @@ return local object
 -> Buffer shows copy/move are semantic operations, not byte tricks
 -> RAII / Rule of 0/3/5
 -> return by value / RVO revisited with the correct model
--> noexcept move / generic library contract
 -> C convention to C++ type semantics
--> type invariants / regularity / generic programming
+-> type invariants
 ```
 
 這版的關鍵調整：
@@ -906,68 +905,14 @@ RVO / copy elision:
 ## Natural Next Question
 
 ```text
-如果 move operation 是 type 對 library 的承諾，
-那 generic library 怎麼判斷 move path 是否安全？
-```
-
-這自然導向 `noexcept move`。
-
-## Part 5 - Generic And Failure Semantics
-
-## Ch12 - `noexcept` Move Is A Promise To Generic Code
-
-## Cold Open
-
-```cpp
-std::vector<Buffer> buffers;
-buffers.push_back(Buffer(1024));
-```
-
-## Question
-
-```text
-vector reallocation 時一定會 move elements 嗎？
-```
-
-## Naive Model
-
-```text
-move 比 copy 快，所以 vector 一定 move。
-```
-
-## Correct Direction
-
-Generic containers care about exception guarantee.
-
-`std::move_if_noexcept` roughly encodes:
-
-```text
-if nothrow move constructible:
-    move
-else if not copy constructible:
-    move anyway
-else:
-    copy to preserve strong exception guarantee
-```
-
-所以 `noexcept move` 是 type 對 generic code 的承諾。
-
-## Main Reading
-
-- [[20-languages/cpp/deep-dives/Deep Dive - Buffer Bug RAII Rules and noexcept Move]]
-- [[20-languages/cpp/object-resource-semantics/Concept - noexcept Move and Container Reallocation]]
-
-## Natural Next Question
-
-```text
-我們一路看了 return by value、RVO、std::move、Buffer、RAII、noexcept move。
+我們一路看了 return by value、RVO、std::move、move、Buffer、RAII。
 這些真的只是 C++ 零散規則嗎？
 還是它們在解同一個更大的問題？
 ```
 
 這自然導向 Big Reveal。
 
-## Part 6 - The Big Reveal: From C Convention To C++ Type Semantics
+## Part 5 - The Big Reveal: From C Convention To C++ Type Semantics
 
 這段是昇華主題，不放在開頭。
 
@@ -988,8 +933,7 @@ C++ solves C's semantic gap.
 - C `Buffer` 展示 representation copy 可以失去 ownership semantics；
 - C++ `Buffer` 展示 copy / move / destroy 必須成為 type operations；
 - RAII / Rule of 0/3/5 來自 ownership pressure；
-- RVO / copy elision 是有些情況下連 move 都不用；
-- `noexcept move` 是 type 對 generic library 的承諾。
+- RVO / copy elision 是有些情況下連 move 都不用。
 
 這時才可以回頭說：
 
@@ -998,7 +942,7 @@ C++ solves C's semantic gap.
 它們都在把 resource semantics 從 convention 提升到 type / object model。
 ```
 
-## Ch13 - From C Convention To C++ Semantic Lifting
+## Ch12 - From C Convention To C++ Semantic Lifting
 
 ## C-Side Questions
 
@@ -1038,7 +982,7 @@ library vocabulary types
 
 這自然導向 type invariants。
 
-## Ch14 - A Type Is Not Just A Layout
+## Ch13 - A Type Is Not Just A Layout
 
 ## Naive Model
 
@@ -1065,7 +1009,6 @@ Type =
 - copy 定義 value/resource duplication；
 - move 定義 ownership transfer；
 - deleted operation 表示這個 type 不支援某種語義；
-- `noexcept` 影響 generic library；
 - value-like type 和 resource owner 需要不同 operation set。
 
 ## Main Reading
@@ -1073,50 +1016,6 @@ Type =
 - [[20-languages/cpp/deep-dives/Deep Dive - Type Operations Laws Invariants and Stepanov]]
 - [[20-languages/cpp/object-resource-semantics/Concept - C++ Type as Operations and Invariants]]
 - [[20-languages/cpp/conversation-notes/Conversation Note - Type Operations Mathematical Analogy and Stepanov]]
-
-## Natural Next Question
-
-```text
-如果 type 是 operations + invariants，
-generic algorithm 要怎麼知道一個 type 滿足哪些 operations？
-```
-
-這自然導向 concepts / regularity。
-
-## Ch15 - Regularity, Concepts, And Generic Programming
-
-## Core Question
-
-```text
-algorithm 需要的不是某個 class name，
-而是一組 operation requirements。
-那 C++ 如何描述這件事？
-```
-
-## Correct Direction
-
-Generic programming 不只是 template 能吃任何 type。
-
-```text
-algorithm asks for operation requirements
-concepts name those requirements
-regular / semiregular describe value-like behavior
-```
-
-不是每個 type 都該 regular：
-
-```text
-unique ownership type:
-    copy should not exist
-
-value type:
-    copy / equality may be expected semantics
-```
-
-## Main Reading
-
-- [[20-languages/cpp/deep-dives/Deep Dive - Type Operations Laws Invariants and Stepanov]]
-- [[20-languages/cpp/object-resource-semantics/Concept - C++ Type as Operations and Invariants]]
 
 ## End Point
 
@@ -1135,7 +1034,93 @@ Rule of 0/3/5 告訴我們 ownership invariant 會壓迫整組 type operations�
 
 ## Extensions
 
-## E1 - Final Storage Beyond Return
+這些主題都重要，但不放進主線。它們會把焦點從：
+
+```text
+object 如何被建立 / 交付 / 轉移 / 銷毀，
+以及這些操作如何保留語意
+```
+
+拉到更專門的 library behavior、generic programming、low-level storage、ABI 或 cross-language design。
+
+## E1 - `noexcept` Move And Generic Containers
+
+Status:
+
+```text
+extension / library contract case study
+```
+
+Why it is not main path:
+
+```text
+它不是 object delivery 的核心問題，
+而是 generic library 在 exception guarantee 下如何選 copy 或 move。
+```
+
+Core question:
+
+```cpp
+std::vector<Buffer> buffers;
+buffers.push_back(Buffer(1024));
+```
+
+```text
+vector reallocation 時一定會 move elements 嗎？
+```
+
+Correct direction:
+
+```text
+move operation 不只要存在，
+generic container 還會在意它是否 noexcept。
+
+noexcept move 是 type 對 generic code 的承諾。
+```
+
+Reading:
+
+- [[20-languages/cpp/deep-dives/Deep Dive - Buffer Bug RAII Rules and noexcept Move]]
+- [[20-languages/cpp/object-resource-semantics/Concept - noexcept Move and Container Reallocation]]
+
+## E2 - Regularity, Concepts, And Generic Programming
+
+Status:
+
+```text
+extension / generic programming endpoint
+```
+
+Why it is not main path:
+
+```text
+主線只需要讓讀者知道 type 不只是 layout。
+regularity / concepts 是下一層：
+generic algorithm 如何描述它需要哪些 operations。
+```
+
+Core question:
+
+```text
+algorithm 需要的不是某個 class name，
+而是一組 operation requirements。
+那 C++ 如何描述這件事？
+```
+
+Correct direction:
+
+```text
+algorithm asks for operation requirements
+concepts name those requirements
+regular / semiregular describe value-like behavior
+```
+
+Reading:
+
+- [[20-languages/cpp/deep-dives/Deep Dive - Type Operations Laws Invariants and Stepanov]]
+- [[20-languages/cpp/object-resource-semantics/Concept - C++ Type as Operations and Invariants]]
+
+## E3 - Final Storage Beyond Return
 
 Status:
 
@@ -1171,7 +1156,7 @@ Reading:
 - [[20-languages/cpp/object-resource-semantics/Concept - In-place Construction and emplace]]
 - [[20-languages/cpp/object-resource-semantics/Concept - Placement New and construct_at]]
 
-## E2 - Factory Lambda And Delayed Construction
+## E4 - Factory Lambda And Delayed Construction
 
 Status:
 
@@ -1193,7 +1178,7 @@ Reading:
 - [[20-languages/cpp/object-resource-semantics/Concept - Factory Lambda and Delayed Construction]]
 - [Arthur O'Dwyer - The Superconstructing Super Elider](https://quuxplusone.github.io/blog/2018/03/29/the-superconstructing-super-elider/)
 
-## E3 - ABI Return Slot
+## E5 - ABI Return Slot
 
 Status:
 
@@ -1212,7 +1197,7 @@ Reading:
 
 - [[30-systems/abi-function-call/Concept - Function Call Stack and Return Object Storage]]
 
-## E4 - Rust Ownership As Comparison
+## E6 - Rust Ownership As Comparison
 
 Status:
 
@@ -1236,7 +1221,7 @@ Reading:
 
 - [[20-languages/rust/Concept - Rust Ownership Compared With C++ Move]]
 
-## E5 - Other C Semantic Lifting Entry Points
+## E7 - Other C Semantic Lifting Entry Points
 
 Status:
 
@@ -1256,7 +1241,7 @@ Possible openings:
 
 These are useful, but the current teaching route stays centered on return-by-value -> move -> Buffer -> type semantics.
 
-## E6 - CppCon Watchlist
+## E8 - CppCon Watchlist
 
 Status:
 
@@ -1294,7 +1279,6 @@ Reading:
 - `Object is not just data.`
 - `Rule of 0/3/5 is ownership pressure, not a checklist.`
 - `RVO means sometimes there is nothing to move.`
-- `noexcept move is a promise to generic code.`
 - `A type is not just a layout.`
 - `C can do it; the question is where the meaning is stored.`
 - `C++ lifts resource conventions into type operations.`
