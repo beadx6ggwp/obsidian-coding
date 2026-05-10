@@ -59,9 +59,11 @@ B 要怎麼拿到這個 T？
 
 ```text
 Object delivery problem
--> Copy / handoff / In-place 三種可能故事
--> RVO / NRVO / prvalue 是 return-by-value 的一組解法
--> move 是 ownership transfer 的一組解法
+-> Copy worry
+-> Copy semantics: semantic duplication, not byte movement
+-> Buffer shows copy can be wrong, expensive, or impossible
+-> Move appears as ownership transfer when source can be abandoned
+-> RVO / NRVO / prvalue 是 return-by-value 的 no-transfer case
 -> RAII / type invariants 把 resource lifetime 提升成 type semantics
 ```
 
@@ -140,12 +142,12 @@ This table is the earlier architecture draft. The current official readable rout
 
 ```text
 Return by value: how does the caller get a valid T?
--> Object delivery: copy / handoff / in-place as three possible stories
--> std::move misconception / value categories
--> Move branch: ownership transfer when copy is wrong
+-> Copy semantics: semantic duplication, not byte movement
 -> C Buffer: representation copy loses meaning
--> C++ Buffer: copy/move/destroy become type operations
+-> C++ Buffer: copy/destroy become type operations
 -> RAII / Rule of 0/3/5
+-> Move branch: ownership transfer when copy is wrong, expensive, or impossible
+-> std::move misconception / value categories
 -> return by value / RVO as no-transfer case
 -> C convention to C++ type semantics
 -> type invariants
@@ -168,9 +170,10 @@ RVO 是 hook，但第一個問題不是「什麼是 RVO」，
 主線不是 RVO，也不只是 move。
 核心是 ownership / lifetime / resource semantics 如何被 type operations 保留。
 
-C Buffer 不消失，但它不再是第一幕。
-它應該在 move / ownership 被提出後出現，
-用來證明 representation copy 不等於 semantic copy。
+C Buffer 不消失，但它也不該等到 move 之後才出現。
+它應該在 copy 焦慮之後出現，
+用來證明 representation copy 不等於 semantic copy，
+並且替 move 的必要性鋪路。
 ```
 
 ## Side Branches

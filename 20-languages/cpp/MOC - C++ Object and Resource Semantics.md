@@ -166,7 +166,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 如果只想快速查概念，讀 `Core Notes`，但目前 Concept notes 是下一階段要重新校準的 lookup layer，不應取代 Conversation Notes 或新 Deep Dives。
 
-正式教學路線目前以 `return by value` 開場，先讀 `RVO and NRVO`、`Object Delivery`、`std move vs Move Constructor`、`Value Categories`，再進入 `Move Semantics and Ownership`。接著用 `C Buffer` 回答「為什麼 copy / move 不是單純效能問題」，再讀 `C vs C++ Semantic Lifting` 與 `RAII and Rule of 0 3 5`。
+正式教學路線目前以 `return by value` 開場，但第一輪不是直接進 `std::move`。先用 return-local case 產生 copy 焦慮，再讀 `C vs C++ Semantic Lifting` / `Buffer` 相關內容來回答「copy 到底是什麼語意」。接著才進入 `Move Semantics and Ownership`、`std move vs Move Constructor`、`Value Categories`，最後回到 `RVO and NRVO`。
 
 第二輪可以讀 `Half RVO Misconception` 與 `Destination First Construction`，再回到 `Storage vs Object Lifetime`、`Placement New`、`emplace` 這些 Concept cards。這些目前都屬於 final-storage / low-level lifetime extension，不是主線第一輪。
 
