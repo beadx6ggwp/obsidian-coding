@@ -4,14 +4,14 @@
 
 這份 note 是目前正式採用的學習路線草稿。
 
-它不是完整教材，而是用來感受整場教學的「節奏」：
+它不是完整教材，而是用來測試整場教學的「帶入節奏」：
 
 ```text
-讀者先看到一段自然的 C / C++ code
--> 產生疑問
+先給一段普通 C++ code
+-> 讓讀者真的產生疑問
 -> naive model 失敗
--> 才需要下一個 vocabulary
--> vocabulary 反過來解釋剛剛的 code
+-> 才補 vocabulary
+-> 最後把 vocabulary 收束成 C++ object/resource semantics
 ```
 
 目前採用的風格來自 [[20-languages/cpp/Teaching Notes - C++ Object and Resource Semantics|Teaching Notes]]：
@@ -23,38 +23,82 @@ wrong intuition first
 terminology later
 ```
 
-最新判斷是：正式教學不要從 RVO 開場。
+## Current Judgment
 
-RVO 是原始學習動機，但如果主題是「C++ 如何解決 C 的語義保存問題」，更好的入口是 `C Buffer` 的 shallow copy bug。這個例子直接展示：
+上一版從 C `Buffer` shallow copy 開場，語意上是對的，但教學帶入太重：
 
 ```text
-representation 被 copy 了，
-但 ownership semantics 沒有被保留。
+C Buffer
+-> RAII
+-> copy / move
+-> RVO
+-> C semantic gap
 ```
 
-## Current Thesis
+聽眾還沒形成一個主問題，就被丟進很多層概念。
 
-這條路線真正要講的是：
+所以這版改回更自然的入口：
+
+```cpp
+T make() {
+    T x;
+    return x;
+}
+
+T y = make();
+```
+
+第一個問題不是「什麼是 RVO」，而是：
+
+```text
+x 在 function 裡。
+y 在 caller 裡。
+
+那 y 到底怎麼拿到這個 T？
+```
+
+這個入口比較好，因為它先建立一條單一主線：
+
+```text
+一個 T 要從某個地方交到另一個地方時，
+C++ 到底有哪些語意可能？
+```
+
+RVO 仍然是入口，但不是主題。
+
+真正主題是：
 
 ```text
 C++ object 不只是 data。
 
-對 non-trivial type 來說，
-正確性不只在 bytes / layout，
-也在 lifetime、ownership、copy/move operations、valid state、invariants、cost model。
+一個 object 的建立、交付、轉移、銷毀，
+都必須保留 lifetime、ownership、valid state、invariant 和 cost model。
 ```
 
-更大的 C / C++ 對照是：
+## Teaching Thesis
+
+這條路線最後要講的是：
 
 ```text
-C:
-    memory + pointer + function + convention
-
-C++:
-    object lifetime + type operations + RAII + library vocabulary
+C++ object/resource semantics is a system for making object lifetime,
+ownership, operations, and invariants explicit enough for programmers,
+libraries, and compilers to reason about them.
 ```
 
-C 的困境不是做不到，而是很多語義藏在 programmer convention 裡。C++ 的方向不是把 C 包裝得比較好看，而是試圖把 lifetime / ownership / copy / move / valid state 這些語義放進 type operations 和 object model。
+但這句不適合當開場。
+
+正式教學應該讓讀者先經歷：
+
+```text
+return by value 好像會 copy
+-> 但實際上不一定
+-> 那 object 到底怎麼被交付？
+-> copy / move / in-place 是三種不同語意
+-> copy / move 不只是效能問題
+-> resource ownership 會讓 copy 失去語意
+-> RAII / Rule of 0/3/5 / type invariant 開始變得必要
+-> 回頭看，C++ 是在把 C convention 提升成 type semantics
+```
 
 ## Semantic Axes
 
@@ -87,19 +131,56 @@ Validity / invariant:
     ownership invariant
 ```
 
-這個分層很重要，因為：
+這個分層要在中後段才完整攤開。開場只要讓讀者先感覺：
 
 ```text
-RAII 決定 resource 跟 object lifetime 怎麼綁定。
-copy / move 決定這個 RAII object 被交付時，ownership 怎麼保持正確。
-RVO / in-place construction 決定 object 能不能直接在目的地形成。
+copy:
+    A 有一份，B 也要一份。
+
+move:
+    A 已經有，B 接手，A 放棄。
+
+in-place / RVO:
+    A 那邊根本不需要獨立 object，
+    T 直接在 B 的 final storage 形成。
 ```
 
-所以 Rule of 0/3/5 不是把不相關技巧硬湊在一起，而是因為：一旦 type 進入 RAII resource-owning 狀態，copy / move / destroy 這些 special member functions 就必須一起維護同一個 ownership invariant。
+## Route Shape
+
+新版主線：
+
+```text
+return local object
+-> object delivery question
+-> copy / move / in-place as three possible stories
+-> `std::move` and value categories
+-> move as ownership transfer
+-> Buffer shows copy/move are semantic operations, not byte tricks
+-> RAII / Rule of 0/3/5
+-> return by value / RVO revisited with the correct model
+-> noexcept move / generic library contract
+-> C convention to C++ type semantics
+-> type invariants / regularity / generic programming
+```
+
+這版的關鍵調整：
+
+```text
+RVO / return by value:
+    開場用來產生問題。
+
+Buffer:
+    不再當第一幕。
+    改成用來證明 copy / move 背後有 resource semantics。
+
+C semantic gap:
+    不放開頭當抽象 thesis。
+    放在最後當 reveal。
+```
 
 ## Prologue - I Started From RVO
 
-這段保留原始動機，但不把 RVO 當正式教學入口。
+保留原始動機，但不要一開始完整教 RVO。
 
 Opening tone:
 
@@ -114,14 +195,15 @@ copy / move / ownership / lifetime / RAII / type invariants。
 RVO 在這條路線裡的角色：
 
 - 原始 hook；
+- return-by-value 的具體疑問；
 - object delivery 裡的 in-place case；
-- 說明「有時候連 move 都不需要」的 return-by-value case study。
+- 最後用來說明「有時候連 move 都不需要」。
 
 RVO 不是：
 
-- 第一個要完整定義的術語；
-- 整個 C++ object/resource semantics 的中心；
-- RAII / move / ownership 的上位概念。
+- 整場教學的中心；
+- 一開始要背的 compiler trick；
+- RAII / ownership / move 的上位概念。
 
 Reading:
 
@@ -134,82 +216,376 @@ Reading:
 
 ```text
 會寫基本 C / C++
-知道 struct / pointer / malloc/free / class / constructor / destructor / STL
+知道 class / constructor / destructor / reference / STL
 聽過 copy / move / RVO 這些詞
 但沒有把 lifetime、ownership、value category、RAII、type invariant 串成一個模型
 ```
 
-所以教學不從 standard wording 開始，也不從「C++17 prvalue」開始。
+所以開場不能是：
 
-第一個問題應該非常普通：
+- `prvalue` / `xvalue` / `glvalue` 表格；
+- C++17 standard wording；
+- C vs C++ 大哲學；
+- RAII / Rule of Five checklist。
 
-```c
-typedef struct {
-    char* ptr;
-    size_t size;
-} Buffer;
-
-Buffer a = buffer_create(1024);
-Buffer b = a;
-```
-
-這段到底 copy 了什麼？
-
-## Big Shape
-
-整條路線的主軸是：
+第一個問題要普通到像是初學 C++ 時真的會問：
 
 ```text
-C Buffer shallow copy
--> representation copy vs semantic copy
--> C++ Buffer type operations
--> ownership pressure / Rule of 0/3/5
--> move as ownership transfer
--> std::move / value categories
--> return by value / RVO as no-transfer case
--> noexcept move / generic library contract
--> C convention to C++ type semantics
--> type invariants / regularity / generic programming
+我在 function 裡建立 local object，然後 return。
+caller 那邊到底拿到的是什麼？
 ```
 
-核心關係：
+## Part 1 - Return By Value As The Doorway
+
+這一段的任務不是教完 RVO，而是建立主問題：
+
+```text
+一個 object 要從 function 交到 caller 時，
+到底是 copy、move，還是直接在 caller 那邊形成？
+```
+
+## Ch1 - How Many Objects Are In This Code?
+
+## Cold Open
+
+```cpp
+T make() {
+    T x;
+    return x;
+}
+
+T y = make();
+```
+
+## Questions To Ask
+
+```text
+這段 code 裡有幾個 T object？
+`x` 和 `y` 是同一個 object 嗎？
+return by value 一定 copy 嗎？
+local object 會先在 callee stack 建好，再搬到 caller 嗎？
+```
+
+## Naive Model
+
+```text
+function 裡有 x。
+caller 裡有 y。
+所以應該是先 copy，或至少 move 一次。
+```
+
+## Correct Direction
+
+先不要急著背 RVO。
+
+這裡真正冒出的問題是：
+
+```text
+T 不是單純從 A 的 bytes 複製到 B 的 bytes。
+C++ 需要定義「B 如何得到一個 valid T object」。
+```
+
+這就是 object delivery problem。
+
+## Main Reading
+
+- [[20-languages/cpp/deep-dives/Deep Dive - RVO Return Slot and Naive Copy Model]]
+- [[20-languages/cpp/object-resource-semantics/Concept - RVO and NRVO]]
+
+## Natural Next Question
+
+```text
+如果 y 要得到一個 T，
+到底有哪些可能的故事？
+```
+
+這自然導向 copy / move / in-place。
+
+## Ch2 - Three Stories For Getting A T
+
+## Core Frame
+
+假設 A 這邊要產生一個 `T`，B 那邊要拿到 `T`。
+
+基本有三種故事：
 
 ```text
 copy:
-    A 和 B 都要一份語義正確的 T。
+    A 有一份 T。
+    B 也得到一份語意等價的新 T。
 
 move:
-    A 已經擁有 resource，B 接手 ownership。
+    A 已經有一個 T。
+    B 接手 A 背後的 resource / ownership。
+    A 保持 valid moved-from state。
 
-RVO / copy elision:
-    如果 source object 不需要獨立存在，
-    讓 T 直接在 B 的 result storage 形成。
+in-place construction:
+    不要先讓 A 有一個獨立 T。
+    T 直接在 B 的 final storage 形成。
 ```
 
-一句話定稿：
+這章只建立 vocabulary，不深入 standard 細節。
+
+## Why This Works As Early Framing
+
+它不是抽象大理論，而是在回答 Ch1 的普通問題：
 
 ```text
-RVO 告訴我們 object 不一定要被搬。
-move 告訴我們 object 背後的 resource 不能只是被 copy。
-真正的主題是 C++ 如何用 type operations 保留 ownership、lifetime 與 object semantics。
+`y = make()` 到底怎麼拿到 T？
 ```
 
-## What This Path Avoids
+這樣 RVO 不會像孤立最佳化，move 也不會像「到處加 `std::move`」。
 
-不要一開始就做這些事：
+## Main Reading
 
-- 不要一開始定義 RVO。
-- 不要一開始丟 `return T{}`。
-- 不要一開始丟 `return std::move(x)`。
-- 不要一開始講 `prvalue` / `xvalue` / `glvalue` 分類表。
-- 不要一開始把 Rust 拉進主線。
-- 不要把 factory lambda 放進主線。
+- [[20-languages/cpp/object-resource-semantics/Concept - Object Delivery - Copy Move In-place Construction]]
+- [[20-languages/cpp/deep-dives/Deep Dive - Object Not Just Data Report Thesis]]
 
-這些東西不是不重要，而是它們都需要前置疑問。
+## Natural Next Question
 
-## Part 1 - C Buffer: Copy Can Lose Meaning
+```text
+如果我怕 copy 很貴，
+是不是可以幫 compiler 寫 `std::move`？
+```
 
-## Ch1 - C Buffer: Representation Copy Is Not Semantic Copy
+這自然導向 `std::move`。
+
+## Ch3 - Should I Help The Compiler Move?
+
+## Cold Open
+
+```cpp
+T make() {
+    T x;
+    return std::move(x);
+}
+```
+
+## Question
+
+```text
+為什麼要 std::move(x)？
+
+直覺上是：
+    x 是 local object。
+    function 要結束了。
+    反正 x 不用了。
+    那我是不是應該幫 compiler move？
+```
+
+## Naive Model
+
+```text
+copy 很貴。
+move 比 copy 便宜。
+所以 return std::move(x) 比 return x 保險。
+```
+
+## Correct Direction
+
+先不要急著回答 NRVO。
+
+這裡先抓住更根本的問題：
+
+```text
+`std::move(x)` 到底做了什麼？
+它真的 move 了 x 嗎？
+```
+
+這章的任務是把讀者帶到下一段，不是把 return path 一次講完。
+
+## Main Reading
+
+- [[20-languages/cpp/deep-dives/Deep Dive - std move xvalue and Return Path Selection]]
+- [[20-languages/cpp/object-resource-semantics/Concept - std move vs Move Constructor]]
+
+## Natural Next Question
+
+```text
+std::move 到底是不是 move？
+```
+
+這自然導向 value categories。
+
+## Part 2 - Moving Without Moving
+
+這一段處理 `std::move` 的錯覺。
+
+教學重點：
+
+```text
+move 不是語法動作。
+std::move 也不搬 object。
+真正的 move 是 type operation。
+```
+
+## Ch4 - `std::move` Does Not Move
+
+## Cold Open
+
+```cpp
+T x;
+std::move(x);
+```
+
+## Question
+
+```text
+這行執行完，x 被搬走了嗎？
+```
+
+## Naive Model
+
+```text
+std::move(x)
+-> moves x
+-> x 變成 moved-from
+```
+
+## Correct Direction
+
+```text
+std::move(x)
+-> static_cast<T&&>(x)
+-> produces an xvalue expression
+-> later operation may select move constructor / move assignment
+```
+
+`std::move` 是 expression cast / permission signal。
+
+真正 transfer resource 的是 type 的 move constructor / move assignment。
+
+## Main Reading
+
+- [[20-languages/cpp/deep-dives/Deep Dive - std move xvalue and Return Path Selection]]
+- [[20-languages/cpp/object-resource-semantics/Concept - std move vs Move Constructor]]
+
+## Natural Next Question
+
+```text
+如果 std::move 只是改變 expression，
+那 expression category 到底是什麼？
+```
+
+這自然導向 value category。
+
+## Ch5 - Value Category Is Not Lifetime
+
+## Why This Chapter Exists
+
+前面已經看到：
+
+```text
+x
+std::move(x)
+T{}
+```
+
+它們的差異不能只用「有沒有 object」解釋，還需要 expression category。
+
+## Correct Direction
+
+Expression 有兩個基本面向：
+
+```text
+type
+value category
+```
+
+這章只需要讓讀者抓住：
+
+```text
+value category describes expressions;
+lifetime describes objects.
+```
+
+Examples:
+
+- `x` 是 lvalue expression。
+- `std::move(x)` 是 xvalue expression。
+- `T{}` 是 prvalue expression。
+
+## Main Reading
+
+- [[20-languages/cpp/deep-dives/Deep Dive - Value Categories Beyond std move]]
+- [[20-languages/cpp/object-resource-semantics/Concept - Value Categories - lvalue xvalue prvalue]]
+- [Arthur O'Dwyer - Value category is not lifetime](https://quuxplusone.github.io/blog/2019/03/11/value-category-is-not-lifetime/)
+
+## Natural Next Question
+
+```text
+如果 std::move 只是允許 move operation 被選到，
+那 move operation 本身到底在移動什麼？
+```
+
+這自然導向 ownership transfer。
+
+## Ch6 - Move Is Ownership Transfer, Not Faster Copy
+
+## Cold Comparison
+
+```cpp
+struct Matrix4x4 {
+    float m[16];
+};
+
+struct Buffer {
+    char* ptr;
+    size_t size;
+};
+```
+
+## Naive Model
+
+```text
+move = faster copy
+```
+
+## Correct Direction
+
+對 `Matrix4x4` 這種 inline value data，move 可能跟 copy 差不多。
+
+對 `Buffer` 這種 resource owner，move 才有明確語意：
+
+```text
+destination 接手 resource ownership。
+source 留在 valid moved-from state。
+```
+
+所以 move 的重點不是「一定比較快」，而是：
+
+```text
+copy 不合理或太貴時，
+ownership 可以被轉移。
+```
+
+## Main Reading
+
+- [[20-languages/cpp/deep-dives/Deep Dive - Move Ownership Matrix4x4 and Resource Transfer]]
+- [[20-languages/cpp/object-resource-semantics/Concept - Move Semantics and Ownership]]
+- [[20-languages/cpp/conversation-notes/Conversation Note - Move Ownership and Value Categories]]
+
+## Natural Next Question
+
+```text
+為什麼 Buffer 的 copy 會不合理？
+copy 不是只是複製一份 data 嗎？
+```
+
+這自然導向 C Buffer。
+
+## Part 3 - When Copy Loses Meaning
+
+這一段才引入 C `Buffer`。
+
+它不是開場，而是用來回答 Part 2 留下的問題：
+
+```text
+為什麼 copy / move 不是單純效能問題？
+為什麼 move 要講 ownership？
+```
+
+## Ch7 - C Buffer: Representation Copy Is Not Semantic Copy
 
 ## Cold Open
 
@@ -231,7 +607,6 @@ Buffer 能不能 copy？
 copy 是 shallow copy 還是 deep copy？
 copy 之後誰 owns heap buffer？
 誰負責 destroy？
-Buffer 的 lifetime 從哪裡開始，到哪裡結束？
 ```
 
 ## Naive Model
@@ -265,7 +640,7 @@ buffer_destroy(&b);
 
 就可能 double free。
 
-這不是 C 做不到，而是這些規則沒有被 type 本身保留。沒有完整上下文的人，只看 `typedef struct` 和 `Buffer b = a`，無法知道正確語意。
+這不是 C 做不到，而是這些規則沒有被 type 本身保存。沒有完整上下文的人，只看 `typedef struct` 和 `Buffer b = a`，無法知道正確語意。
 
 ## Main Reading
 
@@ -283,9 +658,7 @@ buffer_destroy(&b);
 
 這自然導向 C++ Buffer。
 
-## Part 2 - C++ Buffer: Meaning Moves Into Type Operations
-
-## Ch2 - Copy / Move / Destroy Become Semantics
+## Ch8 - C++ Buffer: Copy / Move / Destroy Become Semantics
 
 ## Cold Open
 
@@ -319,8 +692,6 @@ copy / move 是 compiler 幫我處理的小事
 
 如果 type owns resource，copy / move / destroy 就不再是小細節，而是它的核心語義。
 
-這裡要先分清楚兩個層次：
-
 ```text
 RAII:
     constructor acquire resource
@@ -332,23 +703,15 @@ copy / move:
     ownership invariant 要怎麼保持？
 ```
 
-Default copy 只會複製 pointer value：
-
-```text
-b.ptr = a.ptr
-b.size = a.size
-```
-
-但這沒有定義 ownership semantics。兩個 object 可能都以為自己 owns 同一塊 memory，最後兩個 destructor 都 delete。
-
 C++ 的方向是讓 type operation 明確回答：
 
 ```text
 copy:
-    deep copy? deleted?
+    deep copy? shared ownership? deleted?
 
 move:
-    transfer ownership? moved-from source remains valid?
+    transfer ownership?
+    moved-from source remains valid?
 
 destructor:
     releases owned resource?
@@ -369,7 +732,7 @@ destructor:
 
 這自然導向 RAII / Rule of 0/3/5。
 
-## Ch3 - Rule Of 0/3/5 Is Ownership Pressure
+## Ch9 - Rule Of 0/3/5 Is Ownership Pressure
 
 ## Naive Model
 
@@ -411,174 +774,37 @@ let higher-level domain types follow Rule of Zero
 ## Natural Next Question
 
 ```text
-如果 Buffer 不應該 shallow copy，
-那它要怎麼被交付、放進 container、或從 function return？
+現在我們知道 copy / move 背後有 ownership semantics。
+那回到一開始的 return by value，
+哪些情況是 copy、move，哪些情況是連 move 都不需要？
 ```
 
-這自然導向 move。
+這自然導向 RVO revisited。
 
-## Part 3 - Move: Ownership Transfer When Copy Is Wrong
+## Part 4 - Return By Value Revisited
 
-## Ch4 - If Copy Is Wrong, What Are The Options?
+這一段回到開頭，但現在讀者已經有足夠 vocabulary。
 
-## Question
-
-```text
-如果 `Buffer` owns heap memory，
-那 `B` 要怎麼拿到一個 `Buffer`？
-```
-
-## Naive Model
+現在可以精準區分：
 
 ```text
-copy 是唯一自然的 value delivery。
-```
-
-## Correct Direction
-
-對 resource-owning type，通常有三種方向：
-
-```text
-deep copy:
-    語義正確，但可能昂貴。
-
-delete copy:
-    安全，但 type 不能用 copy delivery。
+copy:
+    duplicate a semantic T
 
 move:
-    source 不要了，destination 接手 resource ownership。
+    transfer ownership from an existing T
+
+RVO / copy elision:
+    initialize result object directly
 ```
 
-Move 的出現，讓 C++ 可以同時保留：
-
-```text
-value-style API
-resource ownership
-low-cost transfer
-```
-
-## Main Reading
-
-- [[20-languages/cpp/deep-dives/Deep Dive - Move Ownership Matrix4x4 and Resource Transfer]]
-- [[20-languages/cpp/object-resource-semantics/Concept - Move Semantics and Ownership]]
-
-## Natural Next Question
-
-```text
-那 move 到底搬了什麼？
-`std::move` 執行完，object 真的被搬走了嗎？
-```
-
-這自然導向 `std::move` / value category。
-
-## Ch5 - `std::move` Does Not Move
+## Ch10 - `return T{}`: Sometimes There Is Nothing To Move
 
 ## Cold Open
 
 ```cpp
-Buffer b(1024);
-std::move(b);
-```
-
-## Question
-
-```text
-這行執行完，b 被搬走了嗎？
-```
-
-## Naive Model
-
-```text
-std::move(b)
--> moves b
--> b becomes empty / invalid / moved-from
-```
-
-## Correct Direction
-
-```text
-std::move(b)
--> static_cast<Buffer&&>(b)
--> produces an xvalue expression
--> later operation may select move constructor / move assignment
-```
-
-`std::move` 只是 expression cast / permission signal。真正 transfer resource 的是 type 的 move constructor / move assignment。
-
-## Main Reading
-
-- [[20-languages/cpp/deep-dives/Deep Dive - std move xvalue and Return Path Selection]]
-- [[20-languages/cpp/object-resource-semantics/Concept - std move vs Move Constructor]]
-
-## Natural Next Question
-
-```text
-如果 `std::move` 只是改變 expression，
-那 value category 到底在控制什麼？
-```
-
-這自然導向 value categories。
-
-## Ch6 - Value Category Is Not Lifetime
-
-## Why This Chapter Exists
-
-前面已經看到：
-
-```text
-b
-std::move(b)
-Buffer{}
-```
-
-它們的差異不能只用「有沒有 object」解釋，還需要 expression category。
-
-## Correct Direction
-
-Expression 有兩個基本面向：
-
-```text
-type
-value category
-```
-
-這章只需要讓讀者抓住：
-
-```text
-value category describes expressions;
-lifetime describes objects.
-```
-
-Examples:
-
-- `b` 是 lvalue expression。
-- `std::move(b)` 是 xvalue expression。
-- `Buffer{}` 是 prvalue expression。
-
-## Main Reading
-
-- [[20-languages/cpp/deep-dives/Deep Dive - Value Categories Beyond std move]]
-- [[20-languages/cpp/object-resource-semantics/Concept - Value Categories - lvalue xvalue prvalue]]
-- [Arthur O'Dwyer - Value category is not lifetime](https://quuxplusone.github.io/blog/2019/03/11/value-category-is-not-lifetime/)
-
-## Natural Next Question
-
-```text
-move 解決的是 source object 已經存在時的 ownership transfer。
-那如果 source object 根本不需要獨立存在呢？
-```
-
-這自然導向 return by value / RVO。
-
-## Part 4 - Return By Value And RVO: When Move Is Not Needed
-
-## Ch7 - Return By Value As Object Delivery
-
-## Cold Open
-
-```cpp
-Buffer make_buffer() {
-    return Buffer(1024);
+T make() {
+    return T{};
 }
 ```
 
@@ -592,7 +818,7 @@ Buffer make_buffer() {
 
 ```text
 callee:
-    建立 temporary Buffer
+    建立 temporary T
 
 return:
     move temporary 到 caller
@@ -600,9 +826,9 @@ return:
 
 ## Correct Direction
 
-`return Buffer(1024)` / `return T{}` 這類 same-type prvalue return 可以直接初始化 result object。
+`return T{}` 這類 same-type prvalue return 可以直接初始化 result object。
 
-這裡的重點不是「compiler 很聰明幫你省掉 move」，而是：
+重點不是「compiler 很聰明幫你省掉 move」，而是：
 
 ```text
 有些 path 根本不是先有 source object 再 transfer；
@@ -623,18 +849,18 @@ return:
 
 這自然導向 NRVO / return path selection。
 
-## Ch8 - `return x` vs `return std::move(x)`
+## Ch11 - `return x` vs `return std::move(x)`
 
 ## Cold Open
 
 ```cpp
-Buffer make_buffer() {
-    Buffer x(1024);
+T make() {
+    T x;
     return x;
 }
 
-Buffer make_buffer_move() {
-    Buffer x(1024);
+T make_move() {
+    T x;
     return std::move(x);
 }
 ```
@@ -688,7 +914,7 @@ RVO / copy elision:
 
 ## Part 5 - Generic And Failure Semantics
 
-## Ch9 - `noexcept` Move Is A Promise To Generic Code
+## Ch12 - `noexcept` Move Is A Promise To Generic Code
 
 ## Cold Open
 
@@ -734,7 +960,7 @@ else:
 ## Natural Next Question
 
 ```text
-我們一路看了 Buffer、copy、move、RVO、RAII、noexcept move。
+我們一路看了 return by value、RVO、std::move、Buffer、RAII、noexcept move。
 這些真的只是 C++ 零散規則嗎？
 還是它們在解同一個更大的問題？
 ```
@@ -743,13 +969,9 @@ else:
 
 ## Part 6 - The Big Reveal: From C Convention To C++ Type Semantics
 
-## Ch10 - From C Convention To C++ Semantic Lifting
+這段是昇華主題，不放在開頭。
 
-## Why This Comes Late
-
-這章不適合放開頭。
-
-如果一開始就說：
+因為如果一開始就說：
 
 ```text
 C++ solves C's semantic gap.
@@ -759,12 +981,13 @@ C++ solves C's semantic gap.
 
 但現在讀者已經看過：
 
-- C `Buffer` 展示 representation 可以被複製，但 ownership semantics 留在 convention；
-- C++ `Buffer` 展示 copy / move / destroy 必須成為 type operations；
-- Rule of 0/3/5 來自 ownership pressure；
+- return by value 不等於 copy；
 - `std::move` 不 move；
-- value category 不等於 lifetime；
+- value category 描述 expression，不是 object lifetime；
 - move 是 ownership transfer；
+- C `Buffer` 展示 representation copy 可以失去 ownership semantics；
+- C++ `Buffer` 展示 copy / move / destroy 必須成為 type operations；
+- RAII / Rule of 0/3/5 來自 ownership pressure；
 - RVO / copy elision 是有些情況下連 move 都不用；
 - `noexcept move` 是 type 對 generic library 的承諾。
 
@@ -774,6 +997,8 @@ C++ solves C's semantic gap.
 原來這些不是零散規則。
 它們都在把 resource semantics 從 convention 提升到 type / object model。
 ```
+
+## Ch13 - From C Convention To C++ Semantic Lifting
 
 ## C-Side Questions
 
@@ -813,7 +1038,7 @@ library vocabulary types
 
 這自然導向 type invariants。
 
-## Ch11 - A Type Is Not Just A Layout
+## Ch14 - A Type Is Not Just A Layout
 
 ## Naive Model
 
@@ -858,7 +1083,7 @@ generic algorithm 要怎麼知道一個 type 滿足哪些 operations？
 
 這自然導向 concepts / regularity。
 
-## Ch12 - Regularity, Concepts, And Generic Programming
+## Ch15 - Regularity, Concepts, And Generic Programming
 
 ## Core Question
 
@@ -898,9 +1123,14 @@ value type:
 走到這裡，讀者應該能把整條路線收束成：
 
 ```text
-C++ object/resource semantics is not one feature.
-It is a system for making object lifetime, ownership, operations, and invariants explicit enough
-for programmers, libraries, and compilers to reason about them.
+RVO 告訴我們 object 不一定要被搬。
+move 告訴我們 object 背後的 resource 不能只是被 copy。
+RAII 告訴我們 resource lifetime 可以跟 object lifetime 綁定。
+Rule of 0/3/5 告訴我們 ownership invariant 會壓迫整組 type operations。
+
+真正的主題是：
+    C++ 如何用 object lifetime、type operations、library vocabulary
+    保留原本容易藏在 C convention 裡的 semantics。
 ```
 
 ## Extensions
@@ -1024,7 +1254,7 @@ Possible openings:
 - callback + `void* context` -> lambda / callable object / type erasure;
 - data race -> mutex / atomic / memory model.
 
-These are useful, but the current teaching route stays centered on Buffer -> move -> RVO.
+These are useful, but the current teaching route stays centered on return-by-value -> move -> Buffer -> type semantics.
 
 ## E6 - CppCon Watchlist
 
@@ -1054,17 +1284,19 @@ Reading:
 
 ## Slogan Bank
 
-- `C can do it; the question is where the meaning is stored.`
+- `Returning by value does not mean copying.`
+- `The first question is not RVO; it is how the caller gets a valid T.`
+- `C++ object delivery has three stories: copy, move, or construct in place.`
+- `std::move does not move.`
+- `Value category is not lifetime.`
+- `Move is not faster copy.`
 - `Representation copy is not semantic copy.`
 - `Object is not just data.`
 - `Rule of 0/3/5 is ownership pressure, not a checklist.`
-- `Move is not faster copy.`
-- `std::move does not move.`
-- `Value category is not lifetime.`
-- `Returning by value does not mean copying.`
 - `RVO means sometimes there is nothing to move.`
 - `noexcept move is a promise to generic code.`
 - `A type is not just a layout.`
+- `C can do it; the question is where the meaning is stored.`
 - `C++ lifts resource conventions into type operations.`
 
 ## Next Step
@@ -1074,16 +1306,17 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 1 - C Buffer: Representation Copy Is Not Semantic Copy
+Write Chapter 1 - How Many Objects Are In This Code?
 ```
 
 Expected chapter goal:
 
 ```text
-Use C Buffer shallow copy to make the reader feel:
-copying bytes is not enough when a resource has ownership semantics.
+Use `T make() { T x; return x; }` to make the reader feel:
+return by value is not automatically "copy local object into caller".
 
-Do not mention RVO yet.
-Do not mention value categories yet.
-Do not turn it into a C vs C++ superiority argument.
+Do not fully teach prvalue / xvalue yet.
+Do not start with `return T{}`.
+Do not start with `return std::move(x)`.
+Do not mention C Buffer yet.
 ```

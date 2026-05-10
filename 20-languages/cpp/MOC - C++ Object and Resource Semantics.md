@@ -156,7 +156,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 1 - C Buffer Representation Copy Is Not Semantic Copy`
+- `Chapter 1 - How Many Objects Are In This Code`
 - `Stepanov Generic Programming and Algebraic Structures`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
@@ -167,10 +167,10 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 如果只想快速查概念，讀 `Core Notes`，但目前 Concept notes 是下一階段要重新校準的 lookup layer，不應取代 Conversation Notes 或新 Deep Dives。
 
-正式教學路線目前以 `C Buffer` 開場，先讀 `C vs C++ Semantic Lifting`、`RAII and Rule of 0 3 5`、`Move Semantics and Ownership`，再回到 `Object Delivery` 和 `RVO and NRVO`。如果卡在 `std::move` 為什麼會破壞 NRVO，先補 `Value Categories` 與 `std move vs Move Constructor`。
+正式教學路線目前以 `return by value` 開場，先讀 `RVO and NRVO`、`Object Delivery`、`std move vs Move Constructor`、`Value Categories`，再進入 `Move Semantics and Ownership`。接著用 `C Buffer` 回答「為什麼 copy / move 不是單純效能問題」，再讀 `C vs C++ Semantic Lifting` 與 `RAII and Rule of 0 3 5`。
 
 第二輪可以讀 `Half RVO Misconception` 與 `Destination First Construction`，再回到 `Storage vs Object Lifetime`、`Placement New`、`emplace` 這些 Concept cards。這樣不會把原始對話裡「我是不是想成半個 RVO」和「哪些 case 同構」混成同一個問題。
 
-最後讀 `Buffer Bug RAII`、`Object Not Just Data`、`C Convention to Cpp Semantic Lifting`、`Type Operations Laws Invariants and Stepanov`，它們負責把單一技巧拉回 C++ 的整體 object/resource model。
+最後讀 `Buffer Bug RAII`、`Object Not Just Data`、`C Convention to Cpp Semantic Lifting`、`Type Operations Laws Invariants and Stepanov`，它們負責把 return-by-value / move / Buffer 這些局部技巧拉回 C++ 的整體 object/resource model。
 
 如果要把它放進更大的 systems 圖像，讀 `Function Call Stack and Return Object Storage`。如果要保留這份對話的提問方法，讀 `Question Trail` 和 `Layered Semantic Decomposition`。

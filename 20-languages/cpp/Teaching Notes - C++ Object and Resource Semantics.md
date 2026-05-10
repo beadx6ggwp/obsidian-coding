@@ -135,15 +135,18 @@ Revised question flow:
 
 這樣的順序比較符合「懂 C++ 但不熟深層語義」的聽眾。每個新名詞都不是硬塞，而是為了解釋上一個 code case。
 
-Current macro-structure is sound:
+Updated macro-structure:
 
 ```text
-C Buffer semantic loss
--> C++ Buffer type operations
--> RAII / Rule of 0/3/5 / noexcept move
--> move as ownership transfer
+return local object
+-> object delivery question
+-> copy / move / in-place as three possible stories
 -> std::move / value categories
--> return by value / RVO as no-transfer case
+-> move as ownership transfer
+-> C Buffer semantic loss
+-> C++ Buffer type operations
+-> RAII / Rule of 0/3/5
+-> return by value / RVO revisited as no-transfer case
 -> generic failure semantics
 -> C convention to C++ type semantics
 -> type invariants / generic programming
@@ -151,13 +154,14 @@ C Buffer semantic loss
 
 Remaining caution:
 
-- Ch1 should start from C `Buffer`, not RVO.
-- RVO should remain in the prologue as original motivation, then appear later as return-by-value / no-transfer case.
+- Ch1 should start from `T make() { T x; return x; }`, not from a named list of RVO rules.
+- RVO should be the hook/question, not the whole subject.
+- C `Buffer` should not be the first scene in the official teaching route; it should appear after move/ownership has been motivated.
 - Move is the best main technical bridge, but the final core is ownership / lifetime / type invariant.
 - Value categories must appear only after `std::move` becomes necessary.
 - Raw storage / emplace should be a supporting interlude, not the main bridge after move ownership.
 - RAII, copy/move, and RVO must not be presented as the same layer. They are lifetime, transfer, and construction-placement axes inside the same object/resource semantics frame.
-- C semantic gap should remain the reveal, but the path must prepare it through C Buffer / C++ Buffer / RAII.
+- C semantic gap should remain the reveal, but the path must prepare it through return-by-value, move, Buffer, C++ Buffer, and RAII.
 
 ## Semantic Axes - 2026-05-11
 
@@ -238,24 +242,27 @@ move 是「搬移不可避免時，便宜地轉移 ownership」。
 而是讓物件盡量直接出生在它最後要待的位置。
 ```
 
-這個 frame 不應該放在教學最前面當抽象 thesis lecture。正式開場應該先用 C `Buffer` 讓讀者感受到 representation copy 和 semantic copy 的差異。之後再把 copy / move / in-place construction 收束成 object delivery frame。
+這個 frame 不應該放在教學最前面當抽象 thesis lecture。正式開場應該先用一段最普通的 return-by-value code，讓讀者自然問「caller 到底怎麼拿到 `T`」：
 
-```c
-typedef struct {
-    char* ptr;
-    size_t size;
-} Buffer;
+```cpp
+T make() {
+    T x;
+    return x;
+}
 
-Buffer a = buffer_create(1024);
-Buffer b = a;
+T y = make();
 ```
+
+之後再把 copy / move / in-place construction 收束成 object delivery frame。
 
 然後每個後續主題都回來回答同一件事：
 
-- C `Buffer`：representation copy 不等於 semantic copy。
-- C++ `Buffer`：copy / move / destroy 必須成為 type operations。
+- return local：caller 如何得到 valid `T`？
+- copy / move / in-place：object delivery 的三種故事。
 - real move：source object 已存在、且 ownership 可以被轉移時才有意義。
 - `std::move`：不是 move，而是允許 move operation 被選到。
+- C `Buffer`：representation copy 不等於 semantic copy。
+- C++ `Buffer`：copy / move / destroy 必須成為 type operations。
 - `return T{}` / RVO：source object 不必獨立存在時，可以直接形成 result object。
 - `emplace`：library/API 層面的 final-storage construction，但不是「保證沒有 move」。
 
@@ -422,24 +429,28 @@ Active route:
 
 ```text
 Prologue:
-    I started from RVO, but RVO is not the formal opening.
+    I started from RVO.
+    Keep that as the emotional entry point, but do not teach RVO as an isolated trick.
 
 Part 1:
-    C Buffer shallow copy.
-    Representation copy is not semantic copy.
+    Return by value as doorway.
+    `T make() { T x; return x; }`
+    The first question is: how does the caller get a valid T?
 
 Part 2:
-    C++ Buffer.
-    Copy / move / destroy become type operations.
-    RAII and Rule of 0/3/5 come from ownership pressure.
+    Moving without moving.
+    `std::move` does not move.
+    Value category describes expressions, not object lifetime.
 
 Part 3:
-    Move.
-    If copy is wrong or expensive, ownership can be transferred.
-    `std::move` and value categories explain how the operation is selected.
+    When copy loses meaning.
+    Move becomes ownership transfer.
+    C Buffer shows representation copy is not semantic copy.
+    C++ Buffer shows copy / move / destroy become type operations.
 
 Part 4:
-    Return by value and RVO.
+    Return by value revisited.
+    `return T{}` / `return x` / `return std::move(x)` can now be explained with the right model.
     RVO is the no-transfer case: sometimes there is nothing to move.
 
 Part 5:
@@ -451,15 +462,15 @@ Part 6:
     C convention becomes C++ type semantics.
 ```
 
-## Archived Return-First Outline
+## Return-First Detailed Outline
 
 Status:
 
 ```text
-superseded
+reactivated as current candidate
 ```
 
-This was the earlier route when the teaching was still centered on return-by-value. Keep it as historical scaffolding, but the official [[20-languages/cpp/Learning Path - C++ Object and Resource Semantics|Learning Path]] now starts from C `Buffer`.
+This route is now the better teaching candidate again. The C `Buffer`-first version was semantically clean, but it front-loaded too many concepts before the listener had one clear question to follow.
 
 ## Prologue - I Only Wanted To Understand RVO
 
