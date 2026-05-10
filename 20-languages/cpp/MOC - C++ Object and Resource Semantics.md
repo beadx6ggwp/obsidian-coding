@@ -143,6 +143,13 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 - [[90-reading-notes/cpp/Reading - CppCon Watchlist for C++ Object Semantics|Reading - CppCon Watchlist for C++ Object Semantics]]
 - [[_meta/thinking-methods/Thinking Method - Layered Semantic Decomposition|Thinking Method - Layered Semantic Decomposition]]
 
+## Teaching Chapters
+
+正式教學章節放在 `20-languages/cpp/teaching`，從 [[20-languages/cpp/Learning Path - C++ Object and Resource Semantics|Learning Path]] 逐章實體化。
+
+- [[20-languages/cpp/teaching/Chapter 1 - How Many Objects Are In This Code|Chapter 1 - How Many Objects Are In This Code]]
+- [[20-languages/cpp/teaching/Chapter 2 - Copy Is Not Just Moving Bytes|Chapter 2 - Copy Is Not Just Moving Bytes]]
+
 ## Calibration Status
 
 - Immediate correctness fixes are tracked in [[20-languages/cpp/Knowledge Audit - C++ Object and Resource Semantics|Knowledge Audit]].
@@ -156,7 +163,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 1 - How Many Objects Are In This Code`
+- `Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
 

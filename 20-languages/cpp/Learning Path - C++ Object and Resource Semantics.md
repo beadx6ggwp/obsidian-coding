@@ -226,6 +226,10 @@ caller 那邊到底拿到的是什麼？
 
 ## Ch1 - How Many Objects Are In This Code?
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 1 - How Many Objects Are In This Code]]
+
 ## Cold Open
 
 ```cpp
@@ -286,6 +290,10 @@ C++ 需要定義「caller 那邊如何出現一個可以正常使用的 T object
 這自然導向 copy semantics。
 
 ## Ch2 - Copy Is Not Just Moving Bytes
+
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 2 - Copy Is Not Just Moving Bytes]]
 
 ## Core Question
 
@@ -1265,17 +1273,16 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 1 - How Many Objects Are In This Code?
+Write Chapter 3 - C Buffer Representation Copy Is Not Semantic Copy
 ```
 
 Expected chapter goal:
 
 ```text
-Use `T make() { T x; return x; }` to make the reader feel:
-return by value is not automatically "copy local object into caller".
+Use the `Buffer` raw-pointer example to show:
+representation copy can look cheap but lose ownership meaning.
 
-Do not fully teach prvalue / xvalue yet.
-Do not start with `return T{}`.
-Do not start with `return std::move(x)`.
-Do not mention C Buffer yet.
+Do not introduce move yet.
+Do not turn it into "C is bad"; frame it as "C can do it, but the meaning lives in convention".
+End by asking what C++ type operations can make explicit.
 ```
