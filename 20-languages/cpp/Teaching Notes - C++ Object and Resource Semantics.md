@@ -140,7 +140,7 @@ Updated macro-structure:
 ```text
 return local object
 -> copy worry
--> copy means semantic duplication, not byte movement
+-> copy must produce a usable object, not just similar bytes
 -> C Buffer semantic loss
 -> C++ Buffer type operations
 -> RAII / Rule of 0/3/5
@@ -257,7 +257,7 @@ T y = make();
 然後每個後續主題都回來回答同一件事：
 
 - return local：caller 如何得到 valid `T`？
-- copy semantics：如果真的 copy，必須產生語意正確的新 object。
+- copy semantics：如果真的 copy，B 必須是另一個能正常使用、正常銷毀的 object。
 - C `Buffer`：representation copy 不等於 semantic copy。
 - C++ `Buffer`：copy / destroy 必須成為 type operations。
 - real move：copy wrong / expensive / impossible，且 source 可被放棄時，ownership transfer 才有意義。
@@ -522,8 +522,8 @@ Teaching purpose:
 
 ```text
 建立：
-copy means semantic duplication,
-not merely representation duplication.
+copy must produce a usable object,
+not merely similar bytes.
 
 這章不要講 move。
 先讓讀者知道 copy 可能很貴，也可能不合理。

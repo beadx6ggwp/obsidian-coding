@@ -60,7 +60,7 @@ B 要怎麼拿到這個 T？
 ```text
 Object delivery problem
 -> Copy worry
--> Copy semantics: semantic duplication, not byte movement
+-> Copy semantics: usable object, not just similar bytes
 -> Buffer shows copy can be wrong, expensive, or impossible
 -> Move appears as ownership transfer when source can be abandoned
 -> RVO / NRVO / prvalue 是 return-by-value 的 no-transfer case
@@ -141,8 +141,8 @@ This table is the earlier architecture draft. The current official readable rout
 正式 `Learning Path` 應該採用這條主線：
 
 ```text
-Return by value: how does the caller get a valid T?
--> Copy semantics: semantic duplication, not byte movement
+Return by value: how does the caller get a usable T?
+-> Copy semantics: usable object, not just similar bytes
 -> C Buffer: representation copy loses meaning
 -> C++ Buffer: copy/destroy become type operations
 -> RAII / Rule of 0/3/5
@@ -165,7 +165,7 @@ RVO 可以在前言中作為原始 hook：
 ```text
 Return by value 應該成為正式開場。
 RVO 是 hook，但第一個問題不是「什麼是 RVO」，
-而是「caller 到底怎麼拿到 valid T」。
+而是「caller 那邊到底怎麼出現一個可以正常使用的 T」。
 
 主線不是 RVO，也不只是 move。
 核心是 ownership / lifetime / resource semantics 如何被 type operations 保留。

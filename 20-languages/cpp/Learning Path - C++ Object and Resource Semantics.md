@@ -117,7 +117,7 @@ Validity / invariant:
 
 ```text
 return by value 讓我們不得不問：
-caller 到底怎麼得到一個 valid T？
+caller 那邊到底怎麼出現一個可以正常使用的 T？
 ```
 
 ## Route Shape
@@ -127,7 +127,7 @@ caller 到底怎麼得到一個 valid T？
 ```text
 return local object
 -> why are we worried about copy?
--> copy means semantic duplication, not just byte movement
+-> copy must produce a usable T, not just similar bytes
 -> C Buffer: representation copy can lose meaning
 -> C++ Buffer: copy / destroy become type operations
 -> Rule of 0/3/5: ownership pressure on special member functions
@@ -262,7 +262,7 @@ caller 裡有 y。
 
 ```text
 T 不是單純從 A 的 bytes 複製到 B 的 bytes。
-C++ 需要定義「caller 如何得到一個 valid T object」。
+C++ 需要定義「caller 那邊如何出現一個可以正常使用的 T object」。
 ```
 
 這章只要留下 copy 焦慮：
@@ -304,17 +304,22 @@ copy = 把 A 的 bytes 複製到 B。
 
 對 trivial data，這個直覺可能暫時夠用。
 
-但對 C++ object 來說，copy 的語意應該是：
+但對 C++ object 來說，copy 至少應該讓這件事成立：
 
 ```text
-B 得到一個新的、valid 的、語意上等價的 T。
+B 是另一個 T object。
+B 可以正常使用。
+B 可以正常銷毀。
+而且 B 看起來應該代表和 A 相同的內容。
 ```
 
-也就是：
+也就是說，copy 不能只看 memory 裡的 bits 長得像不像。
+
+比較精準但晚一點才需要的說法是：
 
 ```text
-copy means semantic duplication,
-not merely representation duplication.
+copy is a type-defined operation,
+not merely byte copying.
 ```
 
 這一章先不談 move。
@@ -322,7 +327,7 @@ not merely representation duplication.
 只建立一個壓力：
 
 ```text
-如果 copy 必須產生語意正確的新 object，
+如果 copy 必須產生一個真的能正常使用、正常銷毀的新 object，
 那 copy 可能很貴，
 也可能根本不是合理操作。
 ```
@@ -508,7 +513,7 @@ RAII:
 
 copy:
     如果允許 copy，
-    必須定義 semantic duplication。
+    必須定義 copy 後兩個 object 各自怎麼使用、怎麼銷毀。
 ```
 
 C++ 的方向是讓 type operation 明確回答：
@@ -895,7 +900,7 @@ C++ solves C's semantic gap.
 但現在讀者已經看過：
 
 - return by value 讓人擔心 copy；
-- copy 不是 byte movement，而是 semantic duplication；
+- copy 不是 byte movement，而是 type-defined operation；
 - C `Buffer` 展示 representation copy 可以失去 ownership semantics；
 - C++ `Buffer` 展示 copy / destroy 必須成為 type operations；
 - move 是 source 可被放棄時的 ownership transfer；
@@ -1238,7 +1243,7 @@ Reading:
 ## Slogan Bank
 
 - `Returning by value does not mean copying.`
-- `Copy means semantic duplication, not just byte movement.`
+- `Copy must produce a usable object, not just similar bytes.`
 - `Deep copy can be correct and expensive.`
 - `Deleted copy can be the honest type operation.`
 - `Move appears when copy is wrong, expensive, or impossible and the source can be abandoned.`
