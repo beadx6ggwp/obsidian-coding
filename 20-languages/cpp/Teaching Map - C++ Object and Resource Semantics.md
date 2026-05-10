@@ -59,7 +59,7 @@ B 要怎麼拿到這個 T？
 
 ```text
 Object delivery problem
--> Copy / Move / In-place 三種策略
+-> Copy / handoff / In-place 三種可能故事
 -> RVO / NRVO / prvalue 是 return-by-value 的一組解法
 -> move 是 ownership transfer 的一組解法
 -> RAII / type invariants 把 resource lifetime 提升成 type semantics
@@ -140,7 +140,7 @@ This table is the earlier architecture draft. The current official readable rout
 
 ```text
 Return by value: how does the caller get a valid T?
--> Object delivery: copy / move / in-place as three possible stories
+-> Object delivery: copy / handoff / in-place as three possible stories
 -> std::move misconception / value categories
 -> Move branch: ownership transfer when copy is wrong
 -> C Buffer: representation copy loses meaning

@@ -93,7 +93,7 @@ libraries, and compilers to reason about them.
 return by value 好像會 copy
 -> 但實際上不一定
 -> 那 object 到底怎麼被交付？
--> copy / move / in-place 是三種不同語意
+-> copy / handoff / in-place 是三種先浮現的可能故事
 -> copy / move 不只是效能問題
 -> resource ownership 會讓 copy 失去語意
 -> RAII / Rule of 0/3/5 / type invariant 開始變得必要
@@ -152,7 +152,7 @@ in-place / RVO:
 ```text
 return local object
 -> object delivery question
--> copy / move / in-place as three possible stories
+-> copy / handoff / in-place as three possible stories
 -> `std::move` and value categories
 -> move as ownership transfer
 -> Buffer shows copy/move are semantic operations, not byte tricks
@@ -298,32 +298,48 @@ C++ 需要定義「B 如何得到一個 valid T object」。
 到底有哪些可能的故事？
 ```
 
-這自然導向 copy / move / in-place。
+這自然導向 copy / handoff / in-place 這三種可能故事。
 
-## Ch2 - Three Stories For Getting A T
+## Ch2 - Three Possible Stories For Getting A T
 
 ## Core Frame
 
 假設 A 這邊要產生一個 `T`，B 那邊要拿到 `T`。
 
-基本有三種故事：
+先不要急著把三個 C++ 術語一次講死。
+
+這章只把讀者腦中可能出現的三種故事攤開：
 
 ```text
 copy:
     A 有一份 T。
     B 也得到一份語意等價的新 T。
 
-move:
+handoff / take-over intuition:
     A 已經有一個 T。
-    B 接手 A 背後的 resource / ownership。
-    A 保持 valid moved-from state。
+    如果 A 反正快要結束了，
+    B 能不能不要 duplicate，
+    而是接手 A 裡面可以被接手的東西？
+
+    這個直覺後面才會變成 move semantics。
+    現在還不要把它講成 ownership transfer。
 
 in-place construction:
     不要先讓 A 有一個獨立 T。
     T 直接在 B 的 final storage 形成。
 ```
 
-這章只建立 vocabulary，不深入 standard 細節。
+這章建立的是問題地圖，不是完整答案。
+
+尤其 `move` 不應該在這裡完整定義，因為讀者還沒看到：
+
+```text
+copy 為什麼會錯？
+resource ownership 是什麼？
+為什麼有些 type 不應該被 duplicate？
+```
+
+這些要等到 `Buffer` case 才真正成立。
 
 ## Why This Works As Early Framing
 
@@ -333,7 +349,16 @@ in-place construction:
 `y = make()` 到底怎麼拿到 T？
 ```
 
-這樣 RVO 不會像孤立最佳化，move 也不會像「到處加 `std::move`」。
+這樣 RVO 不會像孤立最佳化，`std::move` 也不會像突然冒出的 spell。
+
+讀者只需要先有一個自然直覺：
+
+```text
+如果 local object 反正快死了，
+是不是可以不要 copy？
+```
+
+這個直覺會導向下一章的 `return std::move(x)`，但真正的 move semantics 要等後面用 ownership case 補齊。
 
 ## Main Reading
 

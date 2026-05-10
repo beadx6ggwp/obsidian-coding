@@ -140,7 +140,7 @@ Updated macro-structure:
 ```text
 return local object
 -> object delivery question
--> copy / move / in-place as three possible stories
+-> copy / handoff / in-place as three possible stories
 -> std::move / value categories
 -> move as ownership transfer
 -> C Buffer semantic loss
@@ -252,12 +252,12 @@ T make() {
 T y = make();
 ```
 
-之後再把 copy / move / in-place construction 收束成 object delivery frame。
+之後再把 copy / handoff / in-place construction 收束成 object delivery frame；其中 handoff 這條線要等到 Buffer / ownership 之後才正式命名成 move semantics。
 
 然後每個後續主題都回來回答同一件事：
 
 - return local：caller 如何得到 valid `T`？
-- copy / move / in-place：object delivery 的三種故事。
+- copy / handoff / in-place：先作為 object delivery 的三種可能故事。
 - real move：source object 已存在、且 ownership 可以被轉移時才有意義。
 - `std::move`：不是 move，而是允許 move operation 被選到。
 - C `Buffer`：representation copy 不等於 semantic copy。
@@ -510,7 +510,7 @@ Teaching purpose:
 不要一開始就丟 C++17 prvalue / `return T{}` / NRVO / xvalue。
 ```
 
-## Ch2 - Three Stories For Getting A T
+## Ch2 - Three Possible Stories For Getting A T
 
 Core model:
 
@@ -519,9 +519,14 @@ copy:
     A 有一份 T。
     B 得到一份語意等價的新 T。
 
-move:
+handoff / take-over intuition:
     A 已經有一個 T。
-    B 接手 A 背後的 ownership/resource。
+    如果 A 反正快要結束了，
+    B 能不能不要 duplicate，
+    而是接手 A 裡面可以被接手的東西？
+
+    這個直覺後面才會變成 move semantics。
+    現在還不要把它講成 ownership transfer。
 
 in-place:
     A 那邊根本不需要先有獨立 object。
@@ -531,7 +536,8 @@ in-place:
 Teaching purpose:
 
 ```text
-先建立 object delivery vocabulary。
+先建立 object delivery 的問題地圖。
+這章不要急著完整定義 move。
 不要在這章完整展開 `return T{}` / C++17 prvalue / NRVO fallback。
 ```
 
