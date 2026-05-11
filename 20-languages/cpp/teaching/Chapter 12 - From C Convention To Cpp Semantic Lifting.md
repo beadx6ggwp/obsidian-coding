@@ -591,154 +591,66 @@ return std::move(x):
 一個 object / resource 的語意如何被建立、保存、轉移、結束？
 ```
 
-## Same Buffer, Different API Shape
+## Now We Have Enough
 
-同一個 `Buffer` 問題，還可以從 function API 的形狀看。
+到這裡，其實不需要再引入新的 C API 形狀。
 
-前面我們用過：
-
-```c
-Buffer a = buffer_create(1024);
-```
-
-這個寫法看起來像是：
+`Buffer` 這條線已經讓我們看見幾個關鍵事實：
 
 ```text
-function produces a Buffer
+1. representation copy 可以發生。
+2. destructor 可以把 cleanup 綁到 object lifetime。
+3. destructor alone 不足以定義 copy 後的 ownership relationship。
+4. copy / move / deleted operation 必須一起維護 resource-owning type 的語意。
+5. return by value / RVO 則說明 result object 不一定需要經過 transfer。
 ```
 
-但 C-style resource API 也常見另一種形狀：
-
-```c
-int buffer_create(Buffer* out, size_t n);
-```
-
-這不是要引出新例子。
-
-它還是同一個 `Buffer`。
-
-只是現在我們問：
+所以現在可以回到真正的問題：
 
 ```text
-如果 result object 的形成被拆成 out parameter + return code，
-哪些語意需要靠 API contract 說清楚？
+C++ 的 copy constructor、move constructor、destructor、
+deleted operation、RVO/copy elision，
+到底想解決 C-style programming 的哪個困境？
 ```
 
-例如：
+答案不是：
 
 ```text
-out 可不可以是 NULL？
-成功時 out 是否 initialized？
-失敗時 out 是什麼狀態？
-caller 什麼時候 destroy？
-return int 的 error code 和 out 的 lifetime 怎麼配合？
+C 做不到。
 ```
 
-C 可以靠 API contract 說清楚。
-
-但 contract 通常在文件裡。
-
-C++ 對同一個 `Buffer`，會傾向把「產生一個 Buffer」寫成：
-
-```cpp
-Buffer make_buffer(std::size_t n);
-```
-
-或者如果可能失敗：
-
-```cpp
-std::optional<Buffer> try_make_buffer(std::size_t n);
-```
-
-這不是單純語法變漂亮。
-
-它改變的是語意位置：
+比較準確的說法是：
 
 ```text
-result 是 return value。
-成功時有 Buffer object。
-失敗時沒有 Buffer object。
-Buffer 的 lifetime 由 object lifetime 管理。
-return by value 的成本由 move / copy elision / RVO 模型處理。
+C-style code 可以完成操作，
+但 ownership / lifetime / copy / transfer 的語意，
+常常不由語言層的 operation 本身承載。
 ```
 
-所以這裡仍然是同一條主線：
+當 operation 不承載這些語意時，語意就會退到：
 
 ```text
-Buffer 的 copy / move / destroy:
-    語意放進 type operations。
-
-Buffer 的 creation API:
-    語意放進 return type / object lifetime。
+API contract
+function naming
+comments
+documentation
+team convention
+caller discipline
+reviewer memory
 ```
 
-RVO 也不是孤立最佳化。
-
-它讓 C++ 可以寫出更直接的語意：
+C++ 的方向，是盡量把這些語意搬進：
 
 ```text
-this function produces a Buffer
+type operation
+object lifetime
+constructor / destructor
+copy / move rules
+library vocabulary type
+language rule
 ```
 
-而不用因為害怕 copy，退回：
-
-```text
-please pass me a pointer to uninitialized output storage
-```
-
-## Pointer Semantics Split Apart
-
-C 裡一個 raw pointer 可能同時表示很多意思：
-
-```c
-void process(char* p);
-```
-
-只看 `char* p`，你不知道：
-
-```text
-p 可不可以是 NULL？
-p 指向一個 char 還是一段 buffer？
-process 會不會修改內容？
-process 會不會 free p？
-p 的 lifetime 由誰保證？
-```
-
-C++ 不是消滅 pointer。
-
-但 C++ library 會提供更多 vocabulary types，把這些語意拆開：
-
-```cpp
-void read(std::span<const char> data);
-void write(std::span<char> data);
-void take(std::unique_ptr<char[]> data);
-void view(std::string_view text);
-void use(char& c);
-```
-
-這些 type 的價值不是「比較潮」。
-
-而是它們讓 function signature 多說了一些原本藏在 convention 裡的話：
-
-```text
-span:
-    non-owning contiguous view
-
-unique_ptr:
-    unique ownership
-
-string_view:
-    non-owning string view
-
-reference:
-    refers to an existing object, normally not null
-```
-
-這就是 semantic lifting 的另一個面向：
-
-```text
-用不同 type 表達不同 resource relationship。
-```
+這就是這章要收束到的主題。
 
 ## What Semantic Lifting Means
 

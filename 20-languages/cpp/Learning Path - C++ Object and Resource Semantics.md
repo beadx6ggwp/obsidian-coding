@@ -1049,6 +1049,21 @@ RVO / copy elision:
     result object 可以直接形成時，不需要 transfer
 ```
 
+## Main-Line Boundary
+
+到這裡主線材料已經足夠。
+
+不要在 Chapter 12 正文再引入新的 C API 形狀，例如 out parameter、raw pointer vocabulary split。
+
+那些可以放到 extension。
+
+正文應該直接回答：
+
+```text
+C++ 的 copy / move / destructor / RVO/copy elision，
+到底想解決 C-style programming 的哪個困境？
+```
+
 ## Main Reading
 
 - [[20-languages/cpp/deep-dives/Deep Dive - C Convention to Cpp Semantic Lifting]]
