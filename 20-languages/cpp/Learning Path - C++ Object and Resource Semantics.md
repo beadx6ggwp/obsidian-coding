@@ -733,6 +733,10 @@ std::move(x)
 
 ## Ch9 - Value Category Is Not Lifetime
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 9 - Value Category Is Not Lifetime]]
+
 ## Why This Chapter Exists
 
 前面已經看到：
@@ -803,6 +807,10 @@ RVO / copy elision:
 這個三分法現在才適合完整出現，因為 move 已經有情境了。
 
 ## Ch10 - `return T{}`: Sometimes There Is Nothing To Move
+
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 10 - return T Sometimes There Is Nothing To Move]]
 
 ## Cold Open
 
@@ -1297,15 +1305,15 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 9 - Value Category Is Not Lifetime
+Write Chapter 11 - return x vs return std move x
 ```
 
 Expected chapter goal:
 
 ```text
-Explain that value category describes expressions, not object lifetime.
+Compare named local return with explicit `std::move`.
 
-Use `x`, `std::move(x)`, and `T{}` as the examples.
-Do not turn it into a full standard taxonomy dump.
-Prepare for return-by-value revisited.
+Start from `return x` and `return std::move(x)`.
+Explain why `return std::move(x)` is not a safer default.
+Keep the focus on NRVO candidate shape, fallback move/copy, and how value category affects return path selection.
 ```

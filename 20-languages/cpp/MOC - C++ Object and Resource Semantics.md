@@ -155,6 +155,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 - [[20-languages/cpp/teaching/Chapter 6 - Why Move Exists|Chapter 6 - Why Move Exists]]
 - [[20-languages/cpp/teaching/Chapter 7 - Move Is Ownership Transfer Not Faster Copy|Chapter 7 - Move Is Ownership Transfer Not Faster Copy]]
 - [[20-languages/cpp/teaching/Chapter 8 - std move Does Not Move|Chapter 8 - std move Does Not Move]]
+- [[20-languages/cpp/teaching/Chapter 9 - Value Category Is Not Lifetime|Chapter 9 - Value Category Is Not Lifetime]]
 
 ## Calibration Status
 
@@ -169,7 +170,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 9 - Value Category Is Not Lifetime`
+- `Chapter 10 - return T Sometimes There Is Nothing To Move`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
 
