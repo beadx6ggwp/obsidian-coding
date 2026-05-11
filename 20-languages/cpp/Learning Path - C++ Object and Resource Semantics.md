@@ -621,6 +621,10 @@ move means transfer.
 
 ## Ch7 - Move Is Ownership Transfer, Not Faster Copy
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 7 - Move Is Ownership Transfer Not Faster Copy]]
+
 ## Cold Comparison
 
 ```cpp
@@ -1289,16 +1293,15 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 7 - Move Is Ownership Transfer Not Faster Copy
+Write Chapter 8 - std move Does Not Move
 ```
 
 Expected chapter goal:
 
 ```text
-Use Matrix4x4 vs Buffer to show:
-move is not automatically faster copy.
+Explain that std::move does not perform transfer.
 
-For inline value data, move may be no better than copy.
-For resource owners, move can transfer ownership cheaply.
-Do not introduce std::move mechanics yet; keep it about the operation's meaning.
+It casts an expression so that a move operation may be selected later.
+Use `T x; std::move(x);` to show nothing is moved by that expression alone.
+Keep value category vocabulary minimal: lvalue vs xvalue only.
 ```
