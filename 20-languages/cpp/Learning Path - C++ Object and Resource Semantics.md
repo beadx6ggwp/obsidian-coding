@@ -882,6 +882,10 @@ return:
 
 ## Ch11 - `return x` vs `return std::move(x)`
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 11 - return x vs return std move x]]
+
 ## Cold Open
 
 ```cpp
@@ -1324,15 +1328,17 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 11 - return x vs return std move x
+Write Chapter 12 - From C Convention To Cpp Semantic Lifting
 ```
 
 Expected chapter goal:
 
 ```text
-Compare named local return with explicit `std::move`.
+Start the Big Reveal.
 
-Start from `return x` and `return std::move(x)`.
-Explain why `return std::move(x)` is not a safer default.
-Keep the focus on NRVO candidate shape, fallback move/copy, and how value category affects return path selection.
+Use the previous chapters as evidence:
+return by value, copy semantics, Buffer, move, std::move, value categories, RVO / NRVO.
+
+Then show that these are not random C++ rules.
+They are all ways C++ lifts hidden C-style resource conventions into type operations and object lifetime rules.
 ```
