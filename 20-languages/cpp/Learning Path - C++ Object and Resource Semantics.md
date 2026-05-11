@@ -489,6 +489,10 @@ C++ 能不能讓 type 自己說清楚：
 
 ## Ch5 - C++ Buffer: Copy / Destroy Become Type Semantics
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 5 - Cpp Buffer Copy Destroy Become Type Semantics]]
+
 ## Cold Open
 
 ```cpp
@@ -1281,16 +1285,15 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 5 - Cpp Buffer Copy Destroy Become Type Semantics
+Write Chapter 6 - Why Move Exists
 ```
 
 Expected chapter goal:
 
 ```text
-Turn the C Buffer problem into a C++ type:
-constructor acquires, destructor releases, copy must be defined or deleted.
+Use the pressure from deleted/expensive copy to motivate move.
 
-Do not make it a Rule of Five checklist yet.
-Do not introduce std::move yet.
-Keep the point focused: copy / destroy become type operations.
+Do not start from std::move.
+Start from the question: if source can be abandoned, can destination take ownership?
+Keep the distinction clear: copy means duplication; move means transfer.
 ```
