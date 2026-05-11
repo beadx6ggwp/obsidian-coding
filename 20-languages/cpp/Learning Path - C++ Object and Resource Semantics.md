@@ -679,6 +679,10 @@ ownership 可以被轉移。
 
 ## Ch8 - `std::move` Does Not Move
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 8 - std move Does Not Move]]
+
 ## Cold Open
 
 ```cpp
@@ -1293,15 +1297,15 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 8 - std move Does Not Move
+Write Chapter 9 - Value Category Is Not Lifetime
 ```
 
 Expected chapter goal:
 
 ```text
-Explain that std::move does not perform transfer.
+Explain that value category describes expressions, not object lifetime.
 
-It casts an expression so that a move operation may be selected later.
-Use `T x; std::move(x);` to show nothing is moved by that expression alone.
-Keep value category vocabulary minimal: lvalue vs xvalue only.
+Use `x`, `std::move(x)`, and `T{}` as the examples.
+Do not turn it into a full standard taxonomy dump.
+Prepare for return-by-value revisited.
 ```

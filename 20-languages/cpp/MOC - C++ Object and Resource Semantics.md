@@ -154,6 +154,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 - [[20-languages/cpp/teaching/Chapter 5 - Cpp Buffer Copy Destroy Become Type Semantics|Chapter 5 - Cpp Buffer Copy Destroy Become Type Semantics]]
 - [[20-languages/cpp/teaching/Chapter 6 - Why Move Exists|Chapter 6 - Why Move Exists]]
 - [[20-languages/cpp/teaching/Chapter 7 - Move Is Ownership Transfer Not Faster Copy|Chapter 7 - Move Is Ownership Transfer Not Faster Copy]]
+- [[20-languages/cpp/teaching/Chapter 8 - std move Does Not Move|Chapter 8 - std move Does Not Move]]
 
 ## Calibration Status
 
@@ -168,7 +169,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 8 - std move Does Not Move`
+- `Chapter 9 - Value Category Is Not Lifetime`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
 
