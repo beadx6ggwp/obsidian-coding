@@ -587,6 +587,10 @@ copy means duplication.
 
 ## Ch6 - Why Move Exists
 
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 6 - Why Move Exists]]
+
 ## Core Question
 
 ```text
@@ -1285,15 +1289,16 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 6 - Why Move Exists
+Write Chapter 7 - Move Is Ownership Transfer Not Faster Copy
 ```
 
 Expected chapter goal:
 
 ```text
-Use the pressure from deleted/expensive copy to motivate move.
+Use Matrix4x4 vs Buffer to show:
+move is not automatically faster copy.
 
-Do not start from std::move.
-Start from the question: if source can be abandoned, can destination take ownership?
-Keep the distinction clear: copy means duplication; move means transfer.
+For inline value data, move may be no better than copy.
+For resource owners, move can transfer ownership cheaply.
+Do not introduce std::move mechanics yet; keep it about the operation's meaning.
 ```
