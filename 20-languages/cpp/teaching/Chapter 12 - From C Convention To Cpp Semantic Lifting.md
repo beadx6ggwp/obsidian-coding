@@ -12,12 +12,24 @@ Related:
 
 ## Goal
 
-前面 11 章看起來講了很多零散主題：
+先不要急著說：
+
+```text
+C vs C++
+```
+
+先問一個更直接的問題：
+
+```text
+為什麼 C++ 需要 copy constructor、move constructor、destructor、
+deleted operations、value categories、RVO / copy elision？
+```
+
+如果只是把它們當成語法規則背起來，它們會看起來很零碎：
 
 ```text
 return by value
 copy
-C Buffer
 deep copy / deleted copy
 move
 std::move
@@ -25,14 +37,77 @@ value category
 RVO / NRVO
 ```
 
-這章要把它們收束成同一條主線：
+但前面每一章其實都在逼近同一件事：
 
 ```text
-C++ 不是單純把 C 包裝得比較好看。
+object operation 不是純機械動作。
+object operation 會承載語意。
+```
 
-C++ 的一條核心路線是：
-把原本藏在 C programmer convention 裡的 resource / object semantics，
-提升到 type、object lifetime、language rules、library vocabulary 裡。
+例如：
+
+```text
+copy:
+    不是單純 bytes copy，
+    而是產生另一個可正常使用、可正常銷毀的 T。
+
+move:
+    不是 faster copy，
+    而是 source 可以被放棄時的 ownership transfer。
+
+destructor:
+    不是普通 function call，
+    而是 object lifetime 結束時 resource 如何收尾。
+
+deleted copy:
+    不是少一個方便功能，
+    而是 type 明確說「這個操作不符合我的語意」。
+
+RVO / copy elision:
+    不是單純 compiler trick，
+    而是 object 可以直接在結果位置形成時，
+    transfer 本身就不需要。
+```
+
+所以這章的起點不是：
+
+```text
+C++ 比 C 好。
+```
+
+而是：
+
+```text
+為什麼這些 object operations 需要存在？
+它們到底在保存什麼語意？
+```
+
+接著才問下一步：
+
+```text
+如果 type operation / object lifetime 不承載這些語意，
+那語意會去哪裡？
+```
+
+答案通常是：
+
+```text
+API convention
+comments
+documentation
+naming
+programmer discipline
+```
+
+這時 C-style code 就是一個很好的對照。
+
+不是因為 C 做不到。
+
+而是因為 C 很清楚地展示：
+
+```text
+當語言層的 operation 主要描述 representation manipulation，
+ownership / lifetime / copy semantics 就常常要靠 convention 補上。
 ```
 
 這就是這裡說的：
@@ -41,68 +116,9 @@ C++ 的一條核心路線是：
 semantic lifting
 ```
 
-但這章不是突然換題。
-
-前一章的 `return by value` 已經是一個具體例子。
-
-你可以寫：
-
-```cpp
-T make();
-```
-
-這個 signature 直接表達：
-
-```text
-this function produces a T
-```
-
-然後 C++ object model 會處理：
-
-```text
-result object 如何初始化？
-需要 copy 嗎？
-可以 move 嗎？
-能不能直接 construct？
-最後誰 destroy？
-```
-
-如果換成 C-style API，常常會變成：
-
-```c
-int make(T* out);
-```
-
-這時候很多語意就會回到 convention：
-
-```text
-out 是否可以是 NULL？
-成功時 out 是否 initialized？
-失敗時 out 是什麼狀態？
-caller 是否要 destroy？
-```
-
-所以 Chapter 12 要做的事，是把這個 pattern 放大：
-
-```text
-return by value 不是孤立案例。
-Buffer copy / move / destroy 也不是孤立案例。
-它們都在問同一件事：
-語意應該只放在 programmer convention 裡，
-還是能被 type / object model 表達？
-```
-
-這樣才進入原本那個很真實的問題：
-
-
-```text
-C 明明也能用 struct、pointer、malloc/free、out parameter 解決問題。
-那為什麼 C++ 要搞 constructor、destructor、copy、move、RAII、RVO 這些東西？
-```
-
 ## Cold Open
 
-看一個 C-style `Buffer`：
+現在再看一個 C-style `Buffer`：
 
 ```c
 typedef struct {

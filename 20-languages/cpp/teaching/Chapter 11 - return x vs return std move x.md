@@ -636,7 +636,7 @@ return x is usually the better expression.
 2. `return std::move(x)` 把 return expression 變成 xvalue，通常可以選 move constructor，但也通常放棄 NRVO 這條 no-transfer path。
 3. Return by value 的核心問題不是「copy 還是 move」，而是 result object 如何被初始化；有時候最好的答案是 no transfer。
 
-## Why This Ends The Return Path Discussion
+## Why This Leads Beyond Return
 
 到這裡，return-by-value 這條線其實已經回答完第一個問題：
 
@@ -644,11 +644,12 @@ return x is usually the better expression.
 我寫 T make()，caller 真的能安全、有效率地拿到一個 T 嗎？
 ```
 
-答案不是單一規則，而是一整套 object model：
+答案不是單一規則，而是一整組 object operation：
 
 ```text
 copy:
-    如果需要 duplication，type 定義怎麼 duplicate。
+    如果 caller 需要另一個 T，
+    type 要定義怎麼 duplicate。
 
 move:
     如果 source 可以被放棄，type 定義怎麼 transfer ownership。
@@ -660,62 +661,86 @@ destructor:
     最後由 object lifetime 決定 resource 何時釋放。
 ```
 
-也就是說，`return by value` 不只是語法方便。
-
-它讓 API 可以直接表達：
-
-```cpp
-T make();
-```
-
-也就是：
+所以這一路看起來像是在講 return path selection，但其實已經牽出更大的問題：
 
 ```text
-this function produces a T
+為什麼 C++ 需要 copy constructor？
+為什麼 C++11 要引入 move constructor？
+為什麼 destructor 和 copy/move 會互相牽動？
+為什麼有些 operation 要被 delete？
+為什麼 return by value 又需要 RVO / NRVO / copy elision？
 ```
 
-而不是先把語意拆成：
+這些概念不是因為 C++ 喜歡複雜。
 
-```c
-int make(T* out);
-```
-
-再靠文件說明：
+它們存在，是因為 object operation 不是純機械動作。
 
 ```text
-out 可不可以是 NULL？
-成功時 out 有沒有 initialized？
-失敗時 out 是什麼狀態？
-caller 要不要 destroy？
-要怎麼避免多餘 copy？
+copy:
+    不只是 bytes copy。
+    它代表「產生另一個語意上可用的 T」。
+
+move:
+    不只是 faster copy。
+    它代表「source 放棄，destination 接手」。
+
+destructor:
+    不只是 function call。
+    它代表「object lifetime 結束時，resource 如何收尾」。
+
+deleted copy:
+    不只是少一個功能。
+    它代表「這個 type 不允許 duplication」。
+
+copy elision / RVO:
+    不只是 compiler trick。
+    它代表「如果 object 可以直接在結果位置形成，就不需要 transfer」。
 ```
 
-所以 Chapter 11 到 Chapter 12 的轉折不是：
+換句話說：
 
 ```text
-return 講完了，換一個 C vs C++ 大主題。
+C++ 讓 object operations 承載語意。
 ```
 
-而是：
+那下一個自然問題就是：
 
 ```text
-return by value 已經示範了一件事：
-C++ 想讓 function signature、type operations、object lifetime
-一起承載原本容易散落在 convention 裡的語意。
+如果這些語意沒有被 type operation / object lifetime 承載，
+它們會去哪裡？
 ```
 
-這就是下一章要 zoom out 的原因。
+它們不會消失。
+
+它們通常會回到：
+
+```text
+API convention
+comments
+documentation
+naming
+caller discipline
+programmer memory
+```
+
+這才是下一章要引入 C-style code 的原因。
+
+C 不是因為做不到，而是 C-style code 很適合展示：
+
+```text
+當語言層的 operation 只表達 representation manipulation，
+ownership / lifetime / copy semantics 很容易落到 convention。
+```
 
 ## Next Question
 
 ```text
-現在我們看過 return by value 如何牽出 copy、move、RVO / NRVO。
-我們也看過 Buffer 如何牽出 ownership、lifetime、destructor、deleted copy、move constructor。
+現在我們看過 copy、move、destructor、deleted copy、std::move、value category、RVO / NRVO。
 
-這些真的只是 C++ 零散規則嗎？
-還是它們其實都在做同一件事：
-把原本容易藏在 C convention 裡的語意，
-放進 type operations 和 object lifetime？
+這些概念為什麼會被設計出來？
+
+如果 object operation 不承載 ownership / lifetime / copy semantics，
+這些語意會在哪裡？
 ```
 
 Next:

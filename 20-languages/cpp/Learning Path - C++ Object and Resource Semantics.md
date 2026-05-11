@@ -941,77 +941,48 @@ RVO / copy elision:
 ## Natural Next Question
 
 ```text
-return by value 不是只在回答「會不會 copy」。
+現在我們看過 copy、move、destructor、deleted copy、std::move、value category、RVO / NRVO。
 
-它其實示範了：
-API 可以直接表達「this function produces a T」，
-而 object model 負責處理初始化、copy、move、elision、destruction。
+這些概念為什麼會被設計出來？
 
-這和 C-style out parameter + convention 的差異是什麼？
-
-Buffer 的 copy / move / destroy 又是不是同一種 pattern？
+如果 object operation 不承載 ownership / lifetime / copy semantics，
+這些語意會在哪裡？
 ```
 
-這自然導向 Big Reveal：C++ 把原本容易藏在 convention 裡的語意，提升到 type operations 和 object lifetime。
+這自然導向 Big Reveal：C++ 讓 object operations 承載語意；如果語意沒有被 type / object lifetime 承載，就容易回到 convention。
 
 ## Part 5 - The Big Reveal: From C Convention To C++ Type Semantics
 
 這段是昇華主題，不放在開頭。
 
-因為如果一開始就說：
+不是因為一開始要談：
 
 ```text
-C++ solves C's semantic gap.
+C vs C++
 ```
 
-讀者可能只會覺得抽象。
+而是因為前面已經看過：
 
-但現在讀者已經看過一個具體入口：
-
-```cpp
-T make();
-```
-
-這個 API 直接表達：
-
-```text
-this function produces a T
-```
-
-而 C++ object model 會處理：
-
-```text
-result object 如何初始化？
-需要 copy 嗎？
-可以 move 嗎？
-能不能直接 construct？
-最後誰 destroy？
-```
-
-如果換成 C-style API，很多語意可能會散到：
-
-```c
-int make(T* out);
-```
-
-以及文件 / convention 裡。
-
-現在讀者也已經看過：
-
-- return by value 讓人擔心 copy；
-- copy 不是 byte movement，而是 type-defined operation；
-- C `Buffer` 展示 representation copy 可以失去 ownership semantics；
-- C++ `Buffer` 展示 copy / destroy 必須成為 type operations；
-- move 是 source 可被放棄時的 ownership transfer；
-- `std::move` 不 move；
-- value category 描述 expression，不是 object lifetime；
-- RVO / copy elision 是有些情況下連 move 都不用。
+- copy 不是 byte movement，而是 type-defined operation。
+- deleted copy 表示這個 type 不允許 duplication。
+- move 不是 faster copy，而是 ownership transfer。
+- destructor 不是普通 function call，而是 object lifetime 結束時的 resource cleanup。
+- `std::move` / value category 讓 expression 可以選到正確 operation。
+- RVO / NRVO / copy elision 表示有些情況下 transfer 根本不需要。
 
 這時才可以回頭說：
 
 ```text
 原來這些不是零散規則。
-它們都在把 resource semantics 從 convention 提升到 type / object model。
+它們都在讓 object operations 承載語意。
+```
+
+接著才引入 C-style code 作為對照：
+
+```text
+如果 type operation / object lifetime 不承載這些語意，
+語意通常不會消失；
+它會回到 API convention、comments、documentation、naming、caller discipline。
 ```
 
 ## Ch12 - From C Convention To C++ Semantic Lifting
