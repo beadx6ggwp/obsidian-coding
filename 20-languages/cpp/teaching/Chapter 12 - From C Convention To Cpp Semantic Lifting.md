@@ -363,53 +363,7 @@ ownership / lifetime / copyability / transfer
 
 前面 Chapter 5 已經看過一個關鍵點。
 
-先快速回憶為什麼 destructor 會把 copy 一起拖進來。
-
-如果一個 type 需要自己寫 destructor，通常代表它在做某種 cleanup：
-
-```text
-delete memory
-close file
-unlock / release handle
-free resource
-```
-
-也就是說，這個 type 很可能不是單純 value data。
-
-它可能 owns something。
-
-一旦 type owns resource，copy 就不能再被當成小事。
-
-因為 copy 會產生另一個 object。
-
-那另一個 object 和原本 object 之間，必須回答：
-
-```text
-它們是不是各自擁有自己的 resource？
-還是共享同一個 resource？
-還是根本不允許 copy？
-```
-
-如果這個問題沒有被回答，而 compiler-generated copy 只是複製 fields，就可能讓兩個 object 都以為自己 owns 同一份 resource。
-
-最後兩個 destructor 都去 cleanup 同一份 resource，就會出事。
-
-所以因果關係是：
-
-```text
-destructor:
-    這個 type 可能有 resource cleanup responsibility。
-
-copy:
-    如果多出一個 object，
-    ownership / cleanup responsibility 要怎麼分配？
-```
-
-這就是為什麼 destructor 不是孤立 operation。
-
-它會壓迫 copy / move 一起被設計。
-
-如果你只寫：
+先寫一個最直接的 C++ 版本：
 
 ```cpp
 class Buffer {
@@ -427,29 +381,104 @@ private:
 };
 ```
 
-這還不夠。
+看起來這已經比前面的 C-style API 好很多。
 
-因為 destructor 只回答：
+使用時：
 
-```text
-object 死亡時怎麼釋放 resource？
+```cpp
+void work() {
+    Buffer a(1024);
+
+    // scope 結束時，~Buffer() 自動執行
+}
 ```
 
-但它沒有回答：
+你不需要手動寫：
 
-```text
-object 被 copy 時 resource 怎麼辦？
+```cpp
+buffer_destroy(&a);
 ```
 
-如果 compiler-generated copy 只是 memberwise copy：
+這確實解決了一部分 lifetime 問題：
+
+```text
+destructor releases resource.
+resource cleanup follows object lifetime.
+```
+
+但它還沒有解決 copy 問題。
+
+現在看這段：
+
+```cpp
+Buffer a(1024);
+Buffer b = a;
+```
+
+很多人會以為：
+
+```text
+class 有 destructor 了。
+C++ 應該會自動把 copy 處理好。
+```
+
+這是錯的。
+
+如果你沒有自己定義 copy constructor，compiler 仍然可能產生一個 memberwise copy：
+
+```text
+b.ptr  = a.ptr
+b.size = a.size
+```
+
+也就是：
 
 ```text
 a.ptr ----+
-          +----> same heap buffer
+          +----> same heap block
 b.ptr ----+
 ```
 
-那兩個 destructor 還是可能 double free。
+這和前面的 C `Buffer b = a` 本質上是同一個問題。
+
+scope 結束時：
+
+```text
+~Buffer() for b -> delete[] b.ptr
+~Buffer() for a -> delete[] a.ptr
+```
+
+如果 `a.ptr` 和 `b.ptr` 指向同一塊 memory，就可能 double delete。
+
+所以這個版本只說清楚了：
+
+```text
+destructor releases resource.
+```
+
+但還沒說清楚：
+
+```text
+copy creates what relationship between a and b?
+```
+
+這就是為什麼 destructor 會把 copy 一起拉進來。
+
+一旦 destructor 表示：
+
+```text
+這個 object 死亡時要釋放某個 resource
+```
+
+copy 就必須回答：
+
+```text
+如果產生另一個 object，
+那另一個 object 是否也 owns resource？
+是 deep copy？
+是 shared ownership？
+還是根本不允許 copy？
+```
 
 這就是為什麼 RAII 和 copy/move 會連在一起。
 
