@@ -991,27 +991,62 @@ Chapter:
 
 - [[20-languages/cpp/teaching/Chapter 12 - From C Convention To Cpp Semantic Lifting]]
 
-## C-Side Questions
+## Re-reading The Buffer Example
 
-```text
-這個 pointer 是 owner 還是 view？
-誰 free？
-copy 是 shallow 還是 deep？
-這個 struct 能不能 bitwise copy？
-哪個 function 會 invalidate 哪個 resource？
+Ch12 不應該突然丟一段新的 C code。
+
+它應該回到 Chapter 3 已經看過的 `Buffer`：
+
+```c
+Buffer a = buffer_create(1024);
+Buffer b = a;
 ```
 
-## C++-Side Mechanisms
+但這次不是重講 double free。
+
+這次的問題是：
 
 ```text
-constructor
-destructor
-copy constructor
-move constructor
-deleted operations
-RAII
-type invariant
-library vocabulary types
+`Buffer b = a` 在 representation 層面很清楚：
+    copy ptr
+    copy size
+
+但 semantic layer 沒有被這個 operation 回答：
+    Buffer 能不能 copy？
+    copy 是 shallow 還是 deep？
+    copy 後誰 owns heap buffer？
+    誰 destroy？
+```
+
+這樣 C-style code 的出場理由才是：
+
+```text
+不是突然講 C。
+而是用已知案例展示：
+如果 object operation 不承載語意，
+語意就會退到 convention / documentation / caller discipline。
+```
+
+## C++-Side Mechanisms As Semantic Carriers
+
+```text
+constructor:
+    建立 valid object / acquire resource
+
+destructor:
+    object lifetime 結束時 release resource
+
+copy constructor:
+    定義 duplication 的真正語意
+
+move constructor:
+    定義 ownership transfer
+
+deleted operations:
+    明確表示某種 operation 不符合 type 語意
+
+RVO / copy elision:
+    result object 可以直接形成時，不需要 transfer
 ```
 
 ## Main Reading

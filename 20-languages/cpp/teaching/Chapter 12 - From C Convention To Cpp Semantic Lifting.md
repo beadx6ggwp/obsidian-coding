@@ -116,55 +116,61 @@ ownership / lifetime / copy semantics 就常常要靠 convention 補上。
 semantic lifting
 ```
 
-## Cold Open
+## Re-reading The Buffer Example
 
-現在再看一個 C-style `Buffer`：
+這裡不要再重新教一次 Buffer bug。
 
-```c
-typedef struct {
-    char* ptr;
-    size_t size;
-} Buffer;
+Chapter 3 已經看過這個例子。
 
-Buffer buffer_create(size_t n);
-void buffer_destroy(Buffer* b);
+當時我們問的是：
+
+```text
+為什麼 `Buffer b = a` 可能危險？
 ```
 
-使用端可能這樣寫：
+現在換一個角度重讀。
+
+這次要問的是：
+
+```text
+如果一個 operation 只處理 representation，
+但沒有承載 ownership / lifetime / copy semantics，
+語意會落到哪裡？
+```
+
+所以我們只需要回想 Chapter 3 的關鍵形狀：
 
 ```c
 Buffer a = buffer_create(1024);
 Buffer b = a;
-
-buffer_destroy(&a);
-buffer_destroy(&b);
 ```
 
-這段 code 的問題不是：
+這不是一個新例子。
+
+它是前面案例的第二次閱讀。
+
+第一次閱讀：
 
 ```text
-C 做不到 Buffer。
+這可能導致 double free。
 ```
 
-C 當然做得到。
-
-問題是，只看這段 code，你不知道：
+第二次閱讀：
 
 ```text
-Buffer b = a;
+這展示 representation copy 和 semantic copy 不是同一件事。
 ```
 
-到底是不是合法操作。
+## Representation Is Clear, Semantics Are Not
 
-## The Hidden Questions
+如果 `Buffer` 的 representation 大概是：
 
-這一行：
-
-```c
-Buffer b = a;
+```text
+ptr
+size
 ```
 
-在 C 的語言層面，很容易被看成：
+那 `Buffer b = a` 在 representation 層面很清楚：
 
 ```text
 copy the struct representation
@@ -177,7 +183,16 @@ b.ptr = a.ptr
 b.size = a.size
 ```
 
-但對一個 resource-owning `Buffer` 來說，真正重要的問題不是 bytes 怎麼複製。
+也就是：
+
+```text
+ptr value 被複製。
+size value 被複製。
+```
+
+這個層次沒有模糊。
+
+真正模糊的是 semantic layer。
 
 真正重要的是：
 
@@ -193,7 +208,28 @@ destroy 之後 Buffer 會變成什麼狀態？
 
 這些問題都不是假的。
 
-它們就是寫 C code 時真正要知道的事。
+它們就是使用一個 resource-owning object 時真正要知道的事。
+
+但 `Buffer b = a` 這個 representation-level operation 沒有回答它們。
+
+所以這個例子的重點不是：
+
+```text
+C code 寫錯了。
+```
+
+而是：
+
+```text
+operation 做了 representation copy，
+但 ownership / lifetime / copy semantics 沒有被 operation 本身承載。
+```
+
+## Where The Meaning Goes
+
+如果語意沒有被 operation 本身承載，它不會消失。
+
+它會移到別的地方。
 
 只是它們常常不在 `struct` definition 裡。
 
