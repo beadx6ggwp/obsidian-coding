@@ -591,15 +591,40 @@ return std::move(x):
 一個 object / resource 的語意如何被建立、保存、轉移、結束？
 ```
 
-## C Out Parameter vs C++ Return By Value
+## Same Buffer, Different API Shape
 
-再看另一個 C 常見寫法：
+同一個 `Buffer` 問題，還可以從 function API 的形狀看。
+
+前面我們用過：
+
+```c
+Buffer a = buffer_create(1024);
+```
+
+這個寫法看起來像是：
+
+```text
+function produces a Buffer
+```
+
+但 C-style resource API 也常見另一種形狀：
 
 ```c
 int buffer_create(Buffer* out, size_t n);
 ```
 
-這裡有很多 hidden questions：
+這不是要引出新例子。
+
+它還是同一個 `Buffer`。
+
+只是現在我們問：
+
+```text
+如果 result object 的形成被拆成 out parameter + return code，
+哪些語意需要靠 API contract 說清楚？
+```
+
+例如：
 
 ```text
 out 可不可以是 NULL？
@@ -613,7 +638,7 @@ C 可以靠 API contract 說清楚。
 
 但 contract 通常在文件裡。
 
-C++ 會傾向把某些情況寫成：
+C++ 對同一個 `Buffer`，會傾向把「產生一個 Buffer」寫成：
 
 ```cpp
 Buffer make_buffer(std::size_t n);
@@ -627,7 +652,7 @@ std::optional<Buffer> try_make_buffer(std::size_t n);
 
 這不是單純語法變漂亮。
 
-它改變了語意位置：
+它改變的是語意位置：
 
 ```text
 result 是 return value。
@@ -637,12 +662,22 @@ Buffer 的 lifetime 由 object lifetime 管理。
 return by value 的成本由 move / copy elision / RVO 模型處理。
 ```
 
-所以 RVO 也不是孤立最佳化。
+所以這裡仍然是同一條主線：
+
+```text
+Buffer 的 copy / move / destroy:
+    語意放進 type operations。
+
+Buffer 的 creation API:
+    語意放進 return type / object lifetime。
+```
+
+RVO 也不是孤立最佳化。
 
 它讓 C++ 可以寫出更直接的語意：
 
 ```text
-this function produces a T
+this function produces a Buffer
 ```
 
 而不用因為害怕 copy，退回：
