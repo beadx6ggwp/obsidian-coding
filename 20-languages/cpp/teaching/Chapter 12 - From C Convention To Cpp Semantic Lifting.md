@@ -363,6 +363,52 @@ ownership / lifetime / copyability / transfer
 
 前面 Chapter 5 已經看過一個關鍵點。
 
+先快速回憶為什麼 destructor 會把 copy 一起拖進來。
+
+如果一個 type 需要自己寫 destructor，通常代表它在做某種 cleanup：
+
+```text
+delete memory
+close file
+unlock / release handle
+free resource
+```
+
+也就是說，這個 type 很可能不是單純 value data。
+
+它可能 owns something。
+
+一旦 type owns resource，copy 就不能再被當成小事。
+
+因為 copy 會產生另一個 object。
+
+那另一個 object 和原本 object 之間，必須回答：
+
+```text
+它們是不是各自擁有自己的 resource？
+還是共享同一個 resource？
+還是根本不允許 copy？
+```
+
+如果這個問題沒有被回答，而 compiler-generated copy 只是複製 fields，就可能讓兩個 object 都以為自己 owns 同一份 resource。
+
+最後兩個 destructor 都去 cleanup 同一份 resource，就會出事。
+
+所以因果關係是：
+
+```text
+destructor:
+    這個 type 可能有 resource cleanup responsibility。
+
+copy:
+    如果多出一個 object，
+    ownership / cleanup responsibility 要怎麼分配？
+```
+
+這就是為什麼 destructor 不是孤立 operation。
+
+它會壓迫 copy / move 一起被設計。
+
 如果你只寫：
 
 ```cpp
