@@ -636,13 +636,86 @@ return x is usually the better expression.
 2. `return std::move(x)` 把 return expression 變成 xvalue，通常可以選 move constructor，但也通常放棄 NRVO 這條 no-transfer path。
 3. Return by value 的核心問題不是「copy 還是 move」，而是 result object 如何被初始化；有時候最好的答案是 no transfer。
 
+## Why This Ends The Return Path Discussion
+
+到這裡，return-by-value 這條線其實已經回答完第一個問題：
+
+```text
+我寫 T make()，caller 真的能安全、有效率地拿到一個 T 嗎？
+```
+
+答案不是單一規則，而是一整套 object model：
+
+```text
+copy:
+    如果需要 duplication，type 定義怎麼 duplicate。
+
+move:
+    如果 source 可以被放棄，type 定義怎麼 transfer ownership。
+
+RVO / NRVO:
+    如果 transfer 不必要，result object 可以直接形成。
+
+destructor:
+    最後由 object lifetime 決定 resource 何時釋放。
+```
+
+也就是說，`return by value` 不只是語法方便。
+
+它讓 API 可以直接表達：
+
+```cpp
+T make();
+```
+
+也就是：
+
+```text
+this function produces a T
+```
+
+而不是先把語意拆成：
+
+```c
+int make(T* out);
+```
+
+再靠文件說明：
+
+```text
+out 可不可以是 NULL？
+成功時 out 有沒有 initialized？
+失敗時 out 是什麼狀態？
+caller 要不要 destroy？
+要怎麼避免多餘 copy？
+```
+
+所以 Chapter 11 到 Chapter 12 的轉折不是：
+
+```text
+return 講完了，換一個 C vs C++ 大主題。
+```
+
+而是：
+
+```text
+return by value 已經示範了一件事：
+C++ 想讓 function signature、type operations、object lifetime
+一起承載原本容易散落在 convention 裡的語意。
+```
+
+這就是下一章要 zoom out 的原因。
+
 ## Next Question
 
 ```text
-現在我們看過 return by value、copy、Buffer、move、std::move、value category、RVO / NRVO。
+現在我們看過 return by value 如何牽出 copy、move、RVO / NRVO。
+我們也看過 Buffer 如何牽出 ownership、lifetime、destructor、deleted copy、move constructor。
 
 這些真的只是 C++ 零散規則嗎？
-還是它們其實都在解同一個更大的問題？
+還是它們其實都在做同一件事：
+把原本容易藏在 C convention 裡的語意，
+放進 type operations 和 object lifetime？
 ```
 
 Next:

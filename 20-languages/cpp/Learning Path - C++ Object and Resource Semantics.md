@@ -941,12 +941,18 @@ RVO / copy elision:
 ## Natural Next Question
 
 ```text
-我們一路看了 return by value、copy、Buffer、move、RVO。
-這些真的只是 C++ 零散規則嗎？
-還是它們在解同一個更大的問題？
+return by value 不是只在回答「會不會 copy」。
+
+它其實示範了：
+API 可以直接表達「this function produces a T」，
+而 object model 負責處理初始化、copy、move、elision、destruction。
+
+這和 C-style out parameter + convention 的差異是什麼？
+
+Buffer 的 copy / move / destroy 又是不是同一種 pattern？
 ```
 
-這自然導向 Big Reveal。
+這自然導向 Big Reveal：C++ 把原本容易藏在 convention 裡的語意，提升到 type operations 和 object lifetime。
 
 ## Part 5 - The Big Reveal: From C Convention To C++ Type Semantics
 
@@ -960,7 +966,37 @@ C++ solves C's semantic gap.
 
 讀者可能只會覺得抽象。
 
-但現在讀者已經看過：
+但現在讀者已經看過一個具體入口：
+
+```cpp
+T make();
+```
+
+這個 API 直接表達：
+
+```text
+this function produces a T
+```
+
+而 C++ object model 會處理：
+
+```text
+result object 如何初始化？
+需要 copy 嗎？
+可以 move 嗎？
+能不能直接 construct？
+最後誰 destroy？
+```
+
+如果換成 C-style API，很多語意可能會散到：
+
+```c
+int make(T* out);
+```
+
+以及文件 / convention 裡。
+
+現在讀者也已經看過：
 
 - return by value 讓人擔心 copy；
 - copy 不是 byte movement，而是 type-defined operation；
@@ -979,6 +1015,10 @@ C++ solves C's semantic gap.
 ```
 
 ## Ch12 - From C Convention To C++ Semantic Lifting
+
+Chapter:
+
+- [[20-languages/cpp/teaching/Chapter 12 - From C Convention To Cpp Semantic Lifting]]
 
 ## C-Side Questions
 
@@ -1012,8 +1052,11 @@ library vocabulary types
 ## Natural Next Question
 
 ```text
-如果 C++ type 承載了這麼多語義，
-那 type 到底是什麼？
+如果 C++ 把 hidden convention 提升到 type / object lifetime / type operations，
+那我們還能不能把 type 想成「memory layout + functions」？
+
+如果語意被放進 type，
+那 type 到底除了 layout 之外還包含什麼？
 ```
 
 這自然導向 type invariants。
@@ -1328,17 +1371,16 @@ Do not add more topics yet.
 Next useful action:
 
 ```text
-Write Chapter 12 - From C Convention To Cpp Semantic Lifting
+Write Chapter 13 - A Type Is Not Just A Layout
 ```
 
 Expected chapter goal:
 
 ```text
-Start the Big Reveal.
+Close the main teaching arc.
 
-Use the previous chapters as evidence:
-return by value, copy semantics, Buffer, move, std::move, value categories, RVO / NRVO.
+Use Chapter 12's semantic lifting conclusion as the bridge.
 
-Then show that these are not random C++ rules.
-They are all ways C++ lifts hidden C-style resource conventions into type operations and object lifetime rules.
+Explain that a C++ type is not just memory layout plus functions.
+It also encodes valid states, operations, invariants, lifetime rules, and cost model.
 ```

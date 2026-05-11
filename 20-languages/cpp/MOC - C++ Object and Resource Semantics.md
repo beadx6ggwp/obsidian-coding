@@ -158,6 +158,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 - [[20-languages/cpp/teaching/Chapter 9 - Value Category Is Not Lifetime|Chapter 9 - Value Category Is Not Lifetime]]
 - [[20-languages/cpp/teaching/Chapter 10 - return T Sometimes There Is Nothing To Move|Chapter 10 - return T Sometimes There Is Nothing To Move]]
 - [[20-languages/cpp/teaching/Chapter 11 - return x vs return std move x|Chapter 11 - return x vs return std move x]]
+- [[20-languages/cpp/teaching/Chapter 12 - From C Convention To Cpp Semantic Lifting|Chapter 12 - From C Convention To Cpp Semantic Lifting]]
 
 ## Calibration Status
 
@@ -172,7 +173,7 @@ Concept notes are quick lookup cards. They should be read after the relevant Con
 
 ## Next Notes To Extract
 
-- `Chapter 12 - From C Convention To Cpp Semantic Lifting`
+- `Chapter 13 - A Type Is Not Just A Layout`
 - `C++ Object Resource Semantics Skill Tree`
 - `Report Storyboard - C++ Object Not Just Data`
 
