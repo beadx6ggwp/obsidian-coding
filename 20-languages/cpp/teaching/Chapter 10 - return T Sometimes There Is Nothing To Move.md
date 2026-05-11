@@ -61,6 +61,95 @@ T make() {
 }
 ```
 
+先把語法本身講清楚。
+
+這裡的 `T` 不是某個特定 class name。
+
+它是教學裡常用的 placeholder，意思是：
+
+```text
+some type T
+```
+
+例如你可以把它代換成：
+
+```cpp
+std::string{}
+Widget{}
+Buffer{}
+```
+
+`T{}` 則是 C++ 的 brace initialization 寫法。用很白話的方式說，它表示：
+
+```text
+用空的 initializer list 建立 / 初始化一個 T。
+```
+
+所以：
+
+```cpp
+std::string{}
+```
+
+代表：
+
+```text
+用 no arguments 初始化一個 std::string，
+得到一個 empty string。
+```
+
+如果是：
+
+```cpp
+Widget{}
+```
+
+意思大致是：
+
+```text
+用 no arguments 初始化一個 Widget。
+```
+
+前提是 `Widget` 真的能這樣初始化。
+
+如果某個 type 沒有 default constructor，或不允許 empty-brace initialization，那：
+
+```cpp
+T{}
+```
+
+本身就是 invalid code。
+
+例如：
+
+```cpp
+struct Buffer {
+    explicit Buffer(std::size_t n);
+};
+
+Buffer{};      // invalid: no default constructor
+Buffer{1024};  // ok: calls Buffer(std::size_t)
+```
+
+所以這章用 `T{}` 時，先假設：
+
+```text
+T 是一個可以用 empty braces 初始化的 type。
+```
+
+接下來要問的不是：
+
+```text
+T{} 能不能寫？
+```
+
+而是：
+
+```text
+當 T{} 出現在 return statement 裡時，
+C++ 需要先建立一個 temporary T 再 move 嗎？
+```
+
 問題是：
 
 ```text

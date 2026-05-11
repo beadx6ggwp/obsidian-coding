@@ -820,6 +820,25 @@ T make() {
 }
 ```
 
+## Syntax Note
+
+這裡的 `T` 是 placeholder，表示某個 type。
+
+`T{}` 是 brace initialization，意思是：
+
+```text
+用 empty braces 初始化一個 T。
+```
+
+例如：
+
+```cpp
+std::string{}
+Widget{}
+```
+
+這章先假設 `T` 可以這樣初始化。若某個 type 沒有 default constructor，`T{}` 本身就不合法；那是 type construction rule，不是 return-by-value 的問題。
+
 ## Question
 
 ```text
